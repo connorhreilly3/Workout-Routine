@@ -2030,7 +2030,7 @@ input.w { width: 88px; } input.r { width: 64px; } input.s { width: 200px; max-wi
    Everything is saved on this phone first. Anything that can't send waits here and retries. */
 (function () {
   "use strict";
-  var SYNC_URL = ""; // Google Apps Script web app address, ends in /exec
+  var SYNC_URL = "https://script.google.com/macros/s/AKfycbzNRNvmgsXimHRz-8bfrjcmK2rNrKYJJGmi3OR1NpYIQXQUpYWI0JJv0b2EXGh34B1o/exec"; // Google Apps Script web app address
   var DB = "ptb-db-v1", PASS = "wr-sync-pass", PEND = "wr-sync-pending", INIT = "wr-sync-init", LAST = "wr-sync-last";
   function get(k) { try { var v = localStorage.getItem(k); return v ? JSON.parse(v) : null; } catch (e) { return null; } }
   function put(k, v) { try { if (v == null) localStorage.removeItem(k); else localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} }
