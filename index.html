@@ -155,6 +155,15 @@ p { margin: 0; }
 .chip .k { font-size: 10px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); }
 .chip.lift { background: var(--accent-soft); border-color: transparent; }
 .chip.travel { border-style: dashed; }
+.rest .pad { gap: 12px; }
+.cd { display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; }
+.cdn { font-family: var(--display); font-weight: 800; font-size: 64px; line-height: 0.9; color: var(--accent); font-variant-numeric: tabular-nums; }
+.cdl { font-family: var(--display); font-weight: 800; font-size: 22px; line-height: 1.05; text-transform: uppercase; }
+.quote { font-size: 17px; line-height: 1.45; }
+.nextrow { width: 100%; display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 14px 16px; min-height: 64px; border: none; border-top: 1px solid var(--line); background: var(--sunk); text-align: left; cursor: pointer; color: var(--ink); }
+.nextrow .nt { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.nextrow .nn { font-weight: 700; font-size: 16px; }
+.nextrow .chev { font-size: 26px; color: var(--muted); line-height: 1; }
 .linkbtn { background: none; border: none; padding: 0; color: var(--accent); font-weight: 600; cursor: pointer; text-align: left; font-size: 14px; }
 
 .card { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; overflow: hidden; }
@@ -358,6 +367,12 @@ input.w { width: 88px; } input.r { width: 64px; } input.s { width: 200px; max-wi
 /* Maxes */
 .tmrow { display: grid; grid-template-columns: 1fr auto auto; gap: 12px; font-size: 15px; padding: 10px 16px; border-top: 1px solid var(--line); }
 .tmrow .mono { text-align: right; }
+.tmrow { align-items: center; }
+.tmcell { display: inline-flex; align-items: center; gap: 6px; justify-self: end; }
+.tmcell input.kc.tmin { width: 84px; height: 44px; min-height: 44px; font-size: 18px; }
+.tmnote { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 12px; padding: 0 16px 12px; font-size: 13px; color: var(--muted); }
+.usebtn { min-height: 36px; padding: 0 12px; border-radius: 999px; border: none; background: var(--accent); color: var(--accent-ink); font-weight: 700; font-size: 13px; cursor: pointer; }
+.tmreset { font-size: 13px; }
 .rules { margin: 0; padding: 0 16px 16px 34px; display: flex; flex-direction: column; gap: 8px; font-size: 15px; }
 .src { font-size: 13px; color: var(--muted); padding: 0 16px 16px; }
 @media (prefers-reduced-motion: no-preference) { .sck, .dot, .donepill, .tb { transition: background-color .12s, color .12s, border-color .12s; } }
@@ -444,8 +459,13 @@ input.w { width: 88px; } input.r { width: 64px; } input.s { width: 200px; max-wi
 (function () {
   "use strict";
   // ---------- Program data ----------
-  var ONE_RM = { squat: 340, bench: 300, trap: 450, press: 205, clean: 225 };
-  var TM = { squat: 305, bench: 270, trap: 405, press: 185, clean: 205 };
+  // Plan values; edits made on the Maxes tab are saved on this phone and replace them.
+  var ONE_RM_PLAN = { squat: 340, bench: 300, trap: 450, press: 205, clean: 225 };
+  var TM_PLAN = { squat: 305, bench: 270, trap: 405, press: 185, clean: 205 };
+  var ONE_RM = Object.assign({}, ONE_RM_PLAN, recall("wr-1rm") || {});
+  var TM = Object.assign({}, TM_PLAN, recall("wr-tm") || {});
+  // Rest days count down to this.
+  var GOAL = { label: "Puerto Natales", date: "2026-12-10" };
   var TM_NAMES = { squat: "Back squat", bench: "Bench press", trap: "Trap bar deadlift", press: "Strict press", clean: "Power clean" };
   var BARBELL = { squat: true, bench: true, press: true, clean: true };
 
@@ -895,14 +915,69 @@ input.w { width: 88px; } input.r { width: 64px; } input.s { width: 200px; max-wi
       });
     }
     strip.appendChild(chips);
+    var rest = !sel && isRestDay(te);
     if (sel) {
-      var back = el("button", "linkbtn", "← Back to today's session");
+      var back = el("button", "linkbtn", isRestDay(te) ? "← Back to today" : "← Back to today's session");
       back.type = "button";
       back.addEventListener("click", function () { sel = null; render(); });
       strip.appendChild(back);
     }
     viewEl.appendChild(strip);
-    viewEl.appendChild(renderSession(sel || nowPick));
+    viewEl.appendChild(rest ? renderRest() : renderSession(sel || nowPick));
+  }
+
+  // No lift or extra session on today's date, and nothing running.
+  function isRestDay(te) {
+    if (running && running.id) return false;
+    for (var x = 0; x < EXTRA.length; x++) if (EXTRA[x].date === today) return false;
+    if (!te) return true;
+    return !te.ents.some(function (e) { if (e.kind !== "lift") return false; var s = SESS[e.lift][te.week - 1]; return s && !s.off; });
+  }
+
+  // Short lines for rest days; one per date, so it changes daily.
+  var REST_LINES = [
+    "Rest is part of the program. Today's job is to recover.",
+    "Strength is built in the work and banked in the rest.",
+    "Eat well, sleep early, take a long walk. That's today's session.",
+    "Easy days are what make the hard days count.",
+    "Muscles grow on the days off. Let them.",
+    "Hydrate, stretch, get to bed on time. Tomorrow's lift will thank you.",
+    "A walk with a loaded pack counts as rest-day homework.",
+    "Consistency beats intensity. You're right on schedule.",
+    "Recovery is a skill. Practice it today.",
+    "The trail rewards the rested."
+  ];
+  function renderRest() {
+    var card = el("section", "card rest");
+    var pad = el("div", "pad");
+    pad.appendChild(el("div", "eyebrow", "Rest day"));
+    var days = GOAL ? Math.round((parseISO(GOAL.date) - parseISO(today)) / 86400000) : -1;
+    if (days > 0) {
+      var cd = el("div", "cd");
+      cd.appendChild(el("span", "cdn", String(days)));
+      cd.appendChild(el("span", "cdl", (days === 1 ? "day" : "days") + " until " + GOAL.label));
+      pad.appendChild(cd);
+    } else {
+      pad.appendChild(el("h2", null, "Recover"));
+    }
+    var n = Math.floor(parseISO(today).getTime() / 86400000);
+    pad.appendChild(el("p", "quote", REST_LINES[n % REST_LINES.length]));
+    card.appendChild(pad);
+    // One line to the next session, which opens it if you want to train early.
+    var nx = nowPick;
+    var nxDate = nx && !nx.extra ? liftDate(nx.week, nx.lift) : null;
+    var nxDef = nx && !nx.extra ? SESS[nx.lift][nx.week - 1] : null;
+    if (nxDate && iso(nxDate) >= today && nxDef && !nxDef.off) {
+      var b = el("button", "nextrow"); b.type = "button";
+      var t = el("span", "nt");
+      t.appendChild(el("span", "eyebrow", "Next · " + longDay(nxDate)));
+      t.appendChild(el("span", "nn", LIFT_META[nx.lift].label + " · " + (nxDef.travel ? "Travel session" : LIFT_META[nx.lift].title)));
+      b.appendChild(t);
+      b.appendChild(el("span", "chev", "›"));
+      b.addEventListener("click", function () { sel = { week: nx.week, lift: nx.lift }; render(); window.scrollTo(0, 0); });
+      card.appendChild(b);
+    }
+    return card;
   }
 
   function renderSession(pick) {
@@ -1874,17 +1949,43 @@ input.w { width: 88px; } input.r { width: 64px; } input.s { width: 200px; max-wi
     var card = el("section", "card");
     var pad = el("div", "pad");
     pad.appendChild(el("h3", null, "Training maxes"));
-    pad.appendChild(el("p", "muted", "Loads use 90% of your 1-rep maxes, the PPSA \"everyday max\": a weight you can hit on a bad day. Retested in week 4."));
+    pad.appendChild(el("p", "muted", "Loads use 90% of your 1-rep maxes, the PPSA \"everyday max\": a weight you can hit on a bad day. Retested in week 4. Tap a training max to change it; every planned weight follows."));
     card.appendChild(pad);
     var hdr = el("div", "tmrow");
     hdr.appendChild(el("span", "eyebrow", "Lift")); hdr.appendChild(el("span", "eyebrow", "1RM")); hdr.appendChild(el("span", "eyebrow", "Training max"));
     card.appendChild(hdr);
+    var tested = testedBests();
     Object.keys(TM).forEach(function (k) {
       var r = el("div", "tmrow");
       r.appendChild(el("span", null, TM_NAMES[k]));
       r.appendChild(el("span", "mono muted", String(ONE_RM[k])));
-      r.appendChild(el("span", "mono", TM[k] + " lb"));
+      var cell = el("span", "tmcell");
+      var inp = numInput("w tmin", function () { return {
+        onInput: function () {},
+        onLog: function () { KP.close(); },
+        onClose: function () { var v = numOrNull(inp.value.replace(/\.$/, "")); if (v != null && v > 0 && v !== TM[k]) setMax(k, v); else inp.value = TM[k]; }
+      }; });
+      inp.value = TM[k]; inp.setAttribute("aria-label", TM_NAMES[k] + " training max in pounds");
+      cell.appendChild(inp); cell.appendChild(el("span", "muted", "lb"));
+      r.appendChild(cell);
       card.appendChild(r);
+      var notes = el("div", "tmnote");
+      var best = tested[k];
+      if (best) {
+        var sug = Math.round(best * 0.9 / 5) * 5;
+        if (sug !== TM[k]) {
+          notes.appendChild(el("span", null, "Week 4 best single " + best + " lb → suggested " + sug + " lb"));
+          var use = el("button", "usebtn", "Use " + sug); use.type = "button";
+          use.addEventListener("click", function () { setMax(k, sug, best); });
+          notes.appendChild(use);
+        }
+      }
+      if (TM[k] !== TM_PLAN[k]) {
+        var rs = el("button", "linkbtn tmreset", "Plan was " + TM_PLAN[k] + " · reset"); rs.type = "button";
+        rs.addEventListener("click", function () { setMax(k, TM_PLAN[k], ONE_RM_PLAN[k]); });
+        notes.appendChild(rs);
+      }
+      if (notes.childNodes.length) card.appendChild(notes);
     });
     viewEl.appendChild(card);
 
@@ -1899,6 +2000,37 @@ input.w { width: 88px; } input.r { width: 64px; } input.s { width: 200px; max-wi
     rc.appendChild(ul);
     rc.appendChild(el("p", "src", "Built from Spring Training (percentage progressions, core series), 4 Horsemen (light–heavy–test waves), HIIB 100 and HIBB (10 × 10 and interval formats), and PPSA Pool Season / The Mullet (main lift, then high-rep supersets; fill in your weights)."));
     viewEl.appendChild(rc);
+  }
+
+  // Saves a training max (and, when accepting a test result, the new 1RM) on this phone.
+  function setMax(k, tm, oneRm) {
+    TM[k] = tm;
+    var o = {}; Object.keys(TM).forEach(function (x) { if (TM[x] !== TM_PLAN[x]) o[x] = TM[x]; }); store("wr-tm", Object.keys(o).length ? o : null);
+    if (oneRm != null) {
+      ONE_RM[k] = oneRm;
+      var r = {}; Object.keys(ONE_RM).forEach(function (x) { if (ONE_RM[x] !== ONE_RM_PLAN[x]) r[x] = ONE_RM[x]; }); store("wr-1rm", Object.keys(r).length ? r : null);
+    }
+    render();
+  }
+  // Heaviest completed single per lift from the week 4 test blocks (the ones with a PR attempt).
+  function testedBests() {
+    var out = {}, w = WEEKS.filter(function (x) { return x.test; })[0];
+    if (!w) return out;
+    [1, 2, 3, 4].forEach(function (l) {
+      var s = SESS[l][w.n - 1], lg = logs[docId(w.n, l)];
+      if (!s || !s.blocks || !lg || !lg.items) return;
+      s.blocks.forEach(function (b) {
+        b.items.forEach(function (it) {
+          if (!it.main || it.note !== PR_NOTE) return;
+          var v = lg.items[it.k] || {}, ck = (lg.checks || {})[it.k] || [], plan = expandSets(it);
+          (v.sets || []).forEach(function (wt, i) {
+            var reps = (v.reps || [])[i] != null ? v.reps[i] : (plan[i] ? plan[i].r : null);
+            if (wt != null && reps === 1 && ck[i] && !(v.miss || [])[i] && (!out[it.main] || wt > out[it.main])) out[it.main] = wt;
+          });
+        });
+      });
+    });
+    return out;
   }
 
   // ---------- Logging (shared db) ----------
