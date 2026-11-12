@@ -219,10 +219,9 @@ input.kc.w { width: 88px; }
 .kp-k:active { background: #2A313A; }
 .kp-a { border-radius: 999px; border: none; background: #7092FF; color: #0E1115; font-weight: 800; font-size: 16px; cursor: pointer; }
 .kp-a:active { filter: brightness(.9); }
-.kp-miss { border-radius: 999px; border: none; background: #2A313A; color: #98A2AF; font-weight: 800; font-size: 16px; display: flex; align-items: center; justify-content: center; gap: 8px; cursor: pointer; }
-.kp-miss::before { content: ""; width: 22px; height: 22px; border-radius: 50%; background: #5A636F; transition: background .12s; }
-.kp-miss[aria-pressed="true"] { background: #3A2116; color: #F08A57; }
-.kp-miss[aria-pressed="true"]::before { background: #F08A57; }
+.kp-ok { grid-row: span 3; border-radius: 28px; border: none; background: #7092FF; color: #0E1115; cursor: pointer; display: grid; place-items: center; }
+.kp-ok svg { width: 34px; height: 34px; fill: none; stroke: currentColor; stroke-width: 2.6; stroke-linecap: round; stroke-linejoin: round; }
+.kp-ok:active { filter: brightness(.9); }
 body.kp-open .app { padding-bottom: calc(var(--kph, 360px) + 40px); }
 body.kp-open .timer { bottom: var(--kph, 360px); z-index: 36; }
 .timerbtn { align-self: flex-start; display: inline-flex; align-items: center; gap: 8px; min-height: 44px; padding: 0 16px; border-radius: 999px; border: none; background: var(--ink); color: var(--bg); font-weight: 700; cursor: pointer; }
@@ -286,6 +285,14 @@ input.w { width: 88px; } input.r { width: 64px; } input.s { width: 200px; max-wi
 .days { display: flex; flex-direction: column; }
 .day { display: grid; grid-template-columns: 64px 1fr; gap: 10px; padding: 10px 16px; border-top: 1px solid var(--line); align-items: start; }
 .day.today { background: var(--accent-soft); }
+.day.done { background: var(--sunk); }
+.day.done .dl, .day.done .ent, .day.done .entbtn { color: var(--muted); }
+.day.done .kind.lift { background: var(--line); color: var(--muted); }
+.day.done.today { background: var(--accent-soft); }
+.dck { display: grid !important; place-items: center; width: 20px; height: 20px; margin-top: 4px; border-radius: 50%; background: var(--ok); color: #FFFFFF !important; font-size: 12px !important; font-weight: 700 !important; }
+.chip-done, .chip-miss { font-size: 10px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; padding: 2px 7px; border-radius: 999px; }
+.chip-done { background: var(--ok-soft); color: var(--ok); }
+.chip-miss { color: var(--test); border: 1px solid var(--test); }
 .day .dl { font-weight: 700; font-size: 14px; }
 .day .dl span { display: block; font-weight: 400; color: var(--muted); font-size: 12px; }
 .ents { display: flex; flex-direction: column; gap: 6px; min-width: 0; }
@@ -415,17 +422,11 @@ input.w { width: 88px; } input.r { width: 64px; } input.s { width: 200px; max-wi
 
 <div class="kp" id="kp" hidden role="dialog" aria-label="Number pad">
   <div class="kp-in">
-    <div class="kp-top">
-      <span class="kp-val mono" id="kp-val">0</span>
-      <span class="kp-unit" id="kp-unit">Lb</span>
-      <span class="kp-lbl" id="kp-lbl"></span>
-      <button class="kp-x" type="button" id="kp-close" aria-label="Close number pad"><svg viewBox="0 0 24 24"><path d="m6 9 6 6 6-6"/></svg></button>
-    </div>
     <div class="kp-grid">
-      <button class="kp-k" type="button" data-d="1">1</button><button class="kp-k" type="button" data-d="2">2</button><button class="kp-k" type="button" data-d="3">3</button><button class="kp-a" type="button" id="kp-log">Log</button>
-      <button class="kp-k" type="button" data-d="4">4</button><button class="kp-k" type="button" data-d="5">5</button><button class="kp-k" type="button" data-d="6">6</button><button class="kp-a" type="button" id="kp-auto">Autofill</button>
-      <button class="kp-k" type="button" data-d="7">7</button><button class="kp-k" type="button" data-d="8">8</button><button class="kp-k" type="button" data-d="9">9</button><button class="kp-miss" type="button" id="kp-miss" aria-pressed="false">Miss</button>
-      <button class="kp-k" type="button" data-d=".">.</button><button class="kp-k" type="button" data-d="0">0</button><button class="kp-k" type="button" data-d="del" aria-label="Delete"><svg viewBox="0 0 24 24"><path d="M21 5H9l-6 7 6 7h12z"/><path d="m12 9 6 6M18 9l-6 6"/></svg></button><span></span>
+      <button class="kp-k" type="button" data-d="1">1</button><button class="kp-k" type="button" data-d="2">2</button><button class="kp-k" type="button" data-d="3">3</button><button class="kp-k" type="button" data-d="del" aria-label="Delete"><svg viewBox="0 0 24 24"><path d="M21 5H9l-6 7 6 7h12z"/><path d="m12 9 6 6M18 9l-6 6"/></svg></button>
+      <button class="kp-k" type="button" data-d="4">4</button><button class="kp-k" type="button" data-d="5">5</button><button class="kp-k" type="button" data-d="6">6</button><button class="kp-ok" type="button" id="kp-ok" aria-label="Done"><svg viewBox="0 0 24 24"><path d="m5 12.5 4.5 4.5L19 7.5"/></svg></button>
+      <button class="kp-k" type="button" data-d="7">7</button><button class="kp-k" type="button" data-d="8">8</button><button class="kp-k" type="button" data-d="9">9</button>
+      <button class="kp-k" type="button" data-d=".">.</button><button class="kp-k" type="button" data-d="0">0</button><button class="kp-k" type="button" id="kp-close" aria-label="Close number pad"><svg viewBox="0 0 24 24"><path d="m6 9 6 6 6-6"/></svg></button>
     </div>
   </div>
 </div>
@@ -1128,7 +1129,16 @@ input.w { width: 88px; } input.r { width: 64px; } input.s { width: 200px; max-wi
 
     var W = [], R = [], C = [];
     var sum = el("div", "ssum");
+    // A set counts as missed when the reps entered are fewer than planned.
+    function autoMiss() {
+      for (var j = 0; j < R.length; j++) {
+        var rv = numOrNull(R[j].value), t = sugR(j);
+        miss[j] = rv != null && t != null && rv < t;
+        C[j].classList.toggle("miss", miss[j]);
+      }
+    }
     function save() {
+      autoMiss();
       editLog(id, function (d) {
         d.items = d.items || {};
         var ws = W.map(function (x) { return numOrNull(x.value); }), rs = R.map(function (x) { return numOrNull(x.value); });
@@ -1213,7 +1223,7 @@ input.w { width: 88px; } input.r { width: 64px; } input.s { width: 200px; max-wi
     });
     // Miss state changes the check glyph.
     var origSet = function () { C.forEach(function (c, j) { c.textContent = miss[j] ? "✕" : "✓"; }); };
-    var obs = save; save = function () { origSet(); obs(); };
+    var obs = save; save = function () { obs(); origSet(); };
     drawSum();
     wrap.appendChild(sum);
     return wrap;
@@ -1406,25 +1416,19 @@ input.w { width: 88px; } input.r { width: 64px; } input.s { width: 200px; max-wi
     if (!t || !t.closest || (hapEl && hapEl.contains(t))) return;
     var hit = t.closest("button, input.kc, summary");
     if (!hit) return;
-    haptic(hit.matches(".sck, .setck, .dot, .donepill, .finbtn, #kp-log"));
+    haptic(hit.matches(".sck, .setck, .dot, .donepill, .finbtn, #kp-ok"));
   }, true);
 
   // ---------- Keypad ----------
   var KP = (function () {
-    var sheet = document.getElementById("kp"), valEl = document.getElementById("kp-val"), cur = null, cfg = null, fresh = true;
-    function show() { valEl.textContent = cur && cur.value !== "" ? cur.value : (cur && cur.placeholder && isFinite(+cur.placeholder) ? cur.placeholder : "0"); valEl.style.opacity = cur && cur.value !== "" ? "1" : ".45"; }
+    var sheet = document.getElementById("kp"), cur = null, cfg = null, fresh = true;
+    function show() {}
     function setH() { document.body.style.setProperty("--kph", sheet.offsetHeight + "px"); }
     function open(inp, c) {
-      if (cur && cur !== inp) cur.classList.remove("on");
+      if (cur && cur !== inp) { if (cfg && cfg.onClose) cfg.onClose(); cur.classList.remove("on"); }
       cur = inp; cfg = c; fresh = true;
       inp.classList.add("on");
-      document.getElementById("kp-unit").textContent = c.unit || "Lb";
-      document.getElementById("kp-lbl").textContent = c.label || "";
-      document.getElementById("kp-auto").style.visibility = c.onAuto ? "" : "hidden";
-      var m = document.getElementById("kp-miss");
-      m.style.visibility = c.miss ? "" : "hidden"; m.setAttribute("aria-pressed", String(!!(c.miss && c.miss.get())));
       sheet.hidden = false; document.body.classList.add("kp-open"); setH();
-      show();
       setTimeout(function () { try { inp.scrollIntoView({ block: "center", behavior: "smooth" }); } catch (e) {} }, 30);
     }
     function close() {
@@ -1446,9 +1450,8 @@ input.w { width: 88px; } input.r { width: 64px; } input.s { width: 200px; max-wi
     }
     Array.prototype.forEach.call(sheet.querySelectorAll("[data-d]"), function (k) { k.addEventListener("click", function () { press(k.getAttribute("data-d")); }); });
     document.getElementById("kp-close").addEventListener("click", close);
-    document.getElementById("kp-log").addEventListener("click", function () { if (cur && cur.value.slice(-1) === ".") { cur.value = cur.value.slice(0, -1); if (cfg.onInput) cfg.onInput(); } if (cfg && cfg.onLog) cfg.onLog(); else close(); });
-    document.getElementById("kp-auto").addEventListener("click", function () { if (cfg && cfg.onAuto) { cfg.onAuto(); fresh = true; show(); } });
-    document.getElementById("kp-miss").addEventListener("click", function () { if (!cfg || !cfg.miss) return; var v = !cfg.miss.get(); cfg.miss.set(v); this.setAttribute("aria-pressed", String(v)); });
+    // ✓ finishes the entry: drops a trailing decimal point, then runs the field's done action (or just closes).
+    document.getElementById("kp-ok").addEventListener("click", function () { if (cur && cur.value.slice(-1) === ".") { cur.value = cur.value.slice(0, -1); if (cfg.onInput) cfg.onInput(); } if (cfg && cfg.onLog) cfg.onLog(); else close(); });
     // Tapping outside the sheet and the number fields closes it.
     document.addEventListener("pointerdown", function (e) { if (!cur) return; var t = e.target; if (t.closest && (t.closest("#kp") || t.closest("input.kc") || t.closest(".timer"))) return; close(); }, true);
     window.addEventListener("resize", function () { if (!sheet.hidden) setH(); });
@@ -1579,8 +1582,14 @@ input.w { width: 88px; } input.r { width: 64px; } input.s { width: 200px; max-wi
     var start = parseISO(w.start);
     dayEntries(w.n).forEach(function (ents, i) {
       var dt = addDays(start, i);
-      var row = el("div", "day" + (iso(dt) === today ? " today" : ""));
+      // A day is finished once its date has passed, or once every lift on it is done.
+      var past = iso(dt) < today;
+      var lifts = ents.filter(function (e) { var s = e.kind === "lift" && SESS[e.lift][w.n - 1]; return s && !s.off; });
+      var liftsDone = lifts.length && lifts.every(function (e) { var lg = logs[docId(w.n, e.lift)]; return lg && lg.done; });
+      var finished = lifts.length ? !!liftsDone : past;
+      var row = el("div", "day" + (iso(dt) === today ? " today" : "") + (finished ? " done" : "") + (past ? " past" : ""));
       var dl = el("div", "dl", DOW[i]); dl.appendChild(el("span", null, short(dt)));
+      if (finished) { var dk = el("span", "dck", "✓"); dk.setAttribute("aria-label", "Done"); dl.appendChild(dk); }
       row.appendChild(dl);
       var box = el("div", "ents");
       ents.forEach(function (e) {
@@ -1595,7 +1604,8 @@ input.w { width: 88px; } input.r { width: 64px; } input.s { width: 200px; max-wi
           line.appendChild(b);
           if (e.moved) line.appendChild(el("span", "tm", "moved"));
           var lg = logs[docId(w.n, e.lift)];
-          if (lg && lg.done) line.appendChild(el("span", "tm", "✓ done"));
+          if (lg && lg.done) line.appendChild(el("span", "chip-done", "Done"));
+          else if (past) line.appendChild(el("span", "chip-miss", "Not logged"));
         } else if (e.kind === "class") {
           line.appendChild(el("span", "kind class", "Class"));
           line.appendChild(el("span", null, e.name));
@@ -1621,10 +1631,20 @@ input.w { width: 88px; } input.r { width: 64px; } input.s { width: 200px; max-wi
     var bw = el("div", "bw");
     var lab = el("label", null, "Weigh-in"); lab.setAttribute("for", "bw-input");
     bw.appendChild(lab);
-    var inp = numInput("w", function () { return { label: "Weigh-in · week " + w.n, unit: "Lb", decimals: true, onInput: function () {}, onLog: function () { saveBodyweight(w.n, inp.value); KP.close(); }, onClose: function () { saveBodyweight(w.n, inp.value); } }; }); inp.id = "bw-input"; inp.placeholder = "187";
+    var bwTimer = null;
+    function bwSave(v) {
+      var had = bodyweight["w" + w.n];
+      if (v === "" && !(had && had.lb != null)) return;
+      if (had && numOrNull(v) === had.lb) return;
+      saveBodyweight(w.n, v);
+    }
+    var inp = numInput("w", function () { return { label: "Weigh-in · week " + w.n, unit: "Lb", decimals: true,
+      onInput: function () { clearTimeout(bwTimer); bwTimer = setTimeout(function () { if (inp.value.slice(-1) !== ".") bwSave(inp.value); }, 700); },
+      onLog: function () { KP.close(); },
+      onClose: function () { clearTimeout(bwTimer); bwSave(inp.value.replace(/\.$/, "")); } }; }); inp.id = "bw-input"; inp.placeholder = "187";
     var cur = bodyweight["w" + w.n];
     if (cur && cur.lb != null) inp.value = cur.lb;
-    inp.addEventListener("change", function () { saveBodyweight(w.n, inp.value); });
+    inp.addEventListener("change", function () { bwSave(inp.value); });
     bw.appendChild(inp);
     bw.appendChild(el("span", null, "lb · Goal 180, slowly. Same scale, same morning."));
     card.appendChild(bw);
@@ -1917,7 +1937,8 @@ input.w { width: 88px; } input.r { width: 64px; } input.s { width: 200px; max-wi
     db.doc("bodyweight/w" + w).set({ week: w, lb: numOrNull(val), updatedAt: new Date().toISOString() }).then(function () { setSave("Saved"); }, function () { setSave("Save failed"); });
   }
   var saveText = "";
-  function setSave(t) { saveText = t; var s = document.getElementById("save"); if (s) s.textContent = t; }
+  // Only problems show in the corner; normal saving stays silent.
+  function setSave(t) { saveText = t; var s = document.getElementById("save"); if (s) s.textContent = /fail|can't|not saving|sign in/i.test(t || "") ? t : ""; }
   var STATE_MSGS = ["Loading…", "Offline", "Sign in to save"];
   function updateSave() {
     if (saveText && STATE_MSGS.indexOf(saveText) < 0) return setSave(saveText);
@@ -1979,7 +2000,8 @@ input.w { width: 88px; } input.r { width: 64px; } input.s { width: 200px; max-wi
         if (!n && v.w != null) n = 1;
         var any = ck.some(Boolean);
         for (var i = 0; i < n; i++) {
-          var sw = at(v.sets, i), w = sw != null ? sw : (v.w != null ? v.w : null), r = at(v.reps, i), done = !!ck[i];
+          // Per-set weights when the exercise logs them; otherwise its one weight applies to every set.
+          var sw = at(v.sets, i), w = Array.isArray(v.sets) ? sw : (v.w != null ? v.w : null), r = at(v.reps, i), done = !!ck[i];
           if (!(done || r != null || sw != null || (w != null && any))) continue;
           sets.push([BLOCK, id, date, week, lift, it.n, i + 1, it.rx || "", w, r, !!at(v.miss, i), done]);
         }
@@ -2011,13 +2033,13 @@ input.w { width: 88px; } input.r { width: 64px; } input.s { width: 200px; max-wi
         if (!snap.metadata.fromCache && dbState !== "ready") { dbState = "ready"; updateSave(); }
         var a = document.activeElement, typing = a && (a.tagName === "INPUT" || a.tagName === "TEXTAREA");
         if (view === "today" && firstLogs && !typing) { firstLogs = false; render(); }
-        else if (view === "today") syncToday(); else if (view === "log" || (view === "week" && document.activeElement && document.activeElement.id !== "bw-input")) render();
+        else if (view === "today") syncToday(); else if (view === "log" || (view === "week" && !KP.isOpen() && document.activeElement && document.activeElement.id !== "bw-input")) render();
       }, function () { dbState = "none"; saveText = ""; updateSave(); });
       db.collection("bodyweight").onSnapshot(function (snap) {
         var next = {};
         snap.docs.forEach(function (doc) { next[doc.id] = doc.data(); });
         bodyweight = next;
-        if (view === "log" || (view === "week" && (!document.activeElement || document.activeElement.id !== "bw-input"))) render();
+        if (view === "log" || (view === "week" && !KP.isOpen() && (!document.activeElement || document.activeElement.id !== "bw-input"))) render();
       }, function () {});
     }, function () { clearTimeout(slowTimer); dbState = "none"; saveText = ""; updateSave(); });
   } else {
@@ -2102,15 +2124,13 @@ input.w { width: 88px; } input.r { width: 64px; } input.s { width: 200px; max-wi
     if (!btn) return;
     if (!SYNC_URL) { btn.hidden = true; return; }
     btn.hidden = false;
-    var n = count(), pass = get(PASS), t, cls = "";
-    if (!pass) { t = state === "badpass" ? "Wrong passcode · tap to fix" : "Connect Sheet"; cls = "warn"; }
-    else if (busy) t = "Syncing…";
-    else if (n && state === "offline") t = n + " waiting · offline";
-    else if (n && state === "error") { t = "Sync failed · tap to retry"; cls = "warn"; }
-    else if (n) t = n + " waiting to sync";
-    else { t = "Synced to Sheet"; cls = "ok"; }
+    // Silent when syncing normally; only problems show.
+    var n = count(), pass = get(PASS), t = "";
+    if (!pass) t = state === "badpass" ? "Wrong passcode · tap to fix" : "Connect Sheet";
+    else if (n && !busy && (state === "offline" || state === "error")) t = "Not syncing · tap to retry";
+    btn.hidden = !t;
     btn.textContent = t;
-    btn.className = "syncbtn" + (cls ? " " + cls : "");
+    btn.className = "syncbtn warn";
   }
   if (btn) btn.addEventListener("click", function () {
     if (!get(PASS)) openDlg(); else flush();
