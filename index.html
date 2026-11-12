@@ -68,6 +68,8 @@
   --travel: #5B6577;
   --ok: #1F7A4D;
   --ok-soft: #DDF1E6;
+  --class: #0F766E;
+  --class-soft: #D5EFEA;
   --bar: #14181D;
   --bar-ink: #FFFFFF;
   --p45: #1E4FD6;
@@ -84,7 +86,7 @@
   :root:not([data-theme="light"]) {
     --bg: #0E1115; --surface: #161A20; --sunk: #1C2128; --ink: #E7EBF0; --muted: #98A2AF; --line: #2A313A;
     --accent: #7092FF; --accent-ink: #0E1115; --accent-soft: #1D2742; --test: #F08A57; --test-soft: #3A2116; --travel: #A3ADBD;
-    --ok: #5CC28E; --ok-soft: #173326; --bar: #1C2128; --bar-ink: #E7EBF0;
+    --ok: #5CC28E; --ok-soft: #173326; --class: #4FC7B6; --class-soft: #12302C; --bar: #1C2128; --bar-ink: #E7EBF0;
     --p45: #4C74F0; --p35: #E3B937; --p25: #3EA56C; --p10: #D9DEE5; --p10-ink: #0E1115; --p5: #8A939F;
     color-scheme: dark;
   }
@@ -92,7 +94,7 @@
 :root[data-theme="dark"] {
   --bg: #0E1115; --surface: #161A20; --sunk: #1C2128; --ink: #E7EBF0; --muted: #98A2AF; --line: #2A313A;
   --accent: #7092FF; --accent-ink: #0E1115; --accent-soft: #1D2742; --test: #F08A57; --test-soft: #3A2116; --travel: #A3ADBD;
-  --ok: #5CC28E; --ok-soft: #173326; --bar: #1C2128; --bar-ink: #E7EBF0;
+  --ok: #5CC28E; --ok-soft: #173326; --class: #4FC7B6; --class-soft: #12302C; --bar: #1C2128; --bar-ink: #E7EBF0;
   --p45: #4C74F0; --p35: #E3B937; --p25: #3EA56C; --p10: #D9DEE5; --p10-ink: #0E1115; --p5: #8A939F;
   color-scheme: dark;
 }
@@ -158,6 +160,17 @@ p { margin: 0; }
 .chip.lift { background: var(--accent-soft); border-color: transparent; }
 .chip.travel { border-style: dashed; }
 .rest .pad { gap: 12px; }
+.card.classcard { border-top: 4px solid var(--class); }
+.classcard .pad { gap: 6px; }
+.classcard.big .pad { gap: 12px; }
+.classcard .ck { color: var(--class); }
+.ctop { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+.cbook { font-size: 11px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; padding: 3px 10px; border-radius: 999px; background: var(--class-soft); color: var(--class); }
+.classcard.big h2 { font-size: 40px; line-height: 0.95; }
+.cmeta { display: flex; flex-wrap: wrap; align-items: baseline; gap: 2px 12px; }
+.ctime { font-weight: 700; font-size: 20px; }
+.classcard:not(.big) .ctime { font-size: 16px; }
+.cwhere { color: var(--muted); font-size: 15px; }
 .quote { font-size: 17px; line-height: 1.45; }
 .nextrow { width: 100%; display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 14px 16px; min-height: 64px; border: none; border-top: 1px solid var(--line); background: var(--sunk); text-align: left; cursor: pointer; color: var(--ink); }
 .nextrow .nt { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
@@ -465,7 +478,7 @@ input.w { width: 88px; } input.r { width: 64px; } input.s { width: 200px; max-wi
   var ONE_RM = Object.assign({}, ONE_RM_PLAN, recall("wr-1rm") || {});
   var TM = Object.assign({}, TM_PLAN, recall("wr-tm") || {});
   // Shown at the bottom of the Maxes tab; bump it with every update so it's easy to tell which version a phone has.
-  var APP_VERSION = "11 · Nov 11, 11:20 PM";
+  var APP_VERSION = "12 · Nov 12";
   var TM_NAMES = { squat: "Back squat", bench: "Bench press", trap: "Trap bar deadlift", press: "Strict press", clean: "Power clean" };
   var BARBELL = { squat: true, bench: true, press: true, clean: true };
 
@@ -715,7 +728,7 @@ input.w { width: 88px; } input.r { width: 64px; } input.s { width: 200px; max-wi
       [{ kind: "off", name: "Off" }]
     ];
     var tn = Object.assign({}, TENNIS_DEFAULT, TENNIS[w] || {});
-    if (!tn.skip) d[tn.day].push({ kind: "class", name: tn.booked ? "Tennis clinic · booked" : "Tennis clinic", tm: tn.tm, where: "Wharton Tennis Club" });
+    if (!tn.skip) d[tn.day].push({ kind: "class", name: tn.booked ? "Tennis clinic · booked" : "Tennis clinic", tm: tn.tm, where: "Wharton Tennis Club", booked: !!tn.booked });
     if (w === 2) {
       d[3].push({ kind: "note", name: "Fly to SFO at 4:05 PM" });
       d[4] = [{ kind: "travel", name: "Napa", note: "Travel session or a long hike" }, { kind: "lift", lift: 3 }];
@@ -897,6 +910,9 @@ input.w { width: 88px; } input.r { width: 64px; } input.s { width: 200px; max-wi
     strip.appendChild(el("div", "eyebrow", "Today · " + longDay(parseISO(today))));
     var chips = el("div", "chips");
     var te = todayEntries();
+    // Today's classes get their own cards (unless another day's session is open), so they're not chips too.
+    var classCards = !sel;
+    var classes = te ? te.ents.filter(function (e) { return e.kind === "class"; }) : [];
     for (var x = 0; x < EXTRA.length; x++) if (EXTRA[x].date === today) {
       var xc = el("span", "chip lift"); xc.appendChild(el("span", "k", "Extra")); xc.appendChild(document.createTextNode(EXTRA[x].title)); chips.appendChild(xc);
     }
@@ -912,6 +928,7 @@ input.w { width: 88px; } input.r { width: 64px; } input.s { width: 200px; max-wi
           c.appendChild(el("span", "k", LIFT_META[e.lift].label));
           c.appendChild(document.createTextNode(s && s.travel ? "Travel session" : LIFT_META[e.lift].title));
         } else if (e.kind === "class") {
+          if (classCards) return;
           c = el("span", "chip"); c.appendChild(el("span", "k", "Class")); c.appendChild(document.createTextNode(e.name + " · " + e.tm));
         } else if (e.kind === "travel") {
           c = el("span", "chip travel"); c.appendChild(el("span", "k", "Away")); c.appendChild(document.createTextNode(e.name));
@@ -923,16 +940,76 @@ input.w { width: 88px; } input.r { width: 64px; } input.s { width: 200px; max-wi
         chips.appendChild(c);
       });
     }
-    strip.appendChild(chips);
-    var rest = !sel && isRestDay(te);
+    if (chips.childNodes.length) strip.appendChild(chips);
+    var noLift = isRestDay(te);
     if (sel) {
-      var back = el("button", "linkbtn", isRestDay(te) ? "← Back to today" : "← Back to today's session");
+      var back = el("button", "linkbtn", noLift ? "← Back to today" : "← Back to today's session");
       back.type = "button";
       back.addEventListener("click", function () { sel = null; render(); });
       strip.appendChild(back);
     }
     viewEl.appendChild(strip);
-    viewEl.appendChild(rest ? renderRest() : renderSession(sel || nowPick));
+    if (sel) { viewEl.appendChild(renderSession(sel)); return; }
+    // A day with a class and no lift is a training day, led by the class.
+    if (noLift && classes.length) {
+      classes.forEach(function (e, i) { viewEl.appendChild(classCard(e, true, i === 0, i === classes.length - 1)); });
+      return;
+    }
+    if (noLift) { viewEl.appendChild(renderRest()); return; }
+    classes.forEach(function (e) { viewEl.appendChild(classCard(e, false)); });
+    viewEl.appendChild(renderSession(nowPick));
+  }
+
+  // Funny lines for class days, by class; one per date.
+  var CLASS_LINES = {
+    tennis: [
+      "Cardio, but with a scoreboard.",
+      "It's not a rest day if you're chasing a fuzzy yellow ball.",
+      "Leave the barbell. Bring the backhand.",
+      "Split-step, sprint, repeat. Your calves signed the waiver.",
+      "Today's conditioning comes with a racket and a reason to yell \"out.\""
+    ],
+    boxing: [
+      "Today you hit things and call it cardio.",
+      "Hands up, chin down, dignity optional.",
+      "The only meeting this week where punching is encouraged.",
+      "Your shoulders will remember this tomorrow. Fondly-ish.",
+      "Float like a butterfly, breathe like a freight train."
+    ],
+    pilates: [
+      "It looks gentle. It is not.",
+      "Small movements, big regrets, strong core.",
+      "Your abs have a meeting. Attendance is mandatory."
+    ],
+    other: [
+      "Show up, follow along, sweat.",
+      "Someone else wrote today's workout. Enjoy it."
+    ]
+  };
+  var CLASS_LABEL = { tennis: "Cardio day", boxing: "Conditioning day", pilates: "Core day", other: "Class day" };
+  function classKind(e) { var n = e.name.toLowerCase(); return /tennis/.test(n) ? "tennis" : /box/.test(n) ? "boxing" : /pilates/.test(n) ? "pilates" : "other"; }
+  function dayNum() { return Math.floor(parseISO(today).getTime() / 86400000); }
+
+  // big: the main card on a class day. Otherwise a compact card above the workout.
+  function classCard(e, big, withLine, withNext) {
+    var kind = classKind(e);
+    var name = e.name.replace(/ · booked$/i, ""), booked = e.booked || / · booked$/i.test(e.name);
+    var card = el("section", "card classcard" + (big ? " big" : ""));
+    var pad = el("div", "pad");
+    var top = el("div", "ctop");
+    top.appendChild(el("span", "eyebrow ck", big ? CLASS_LABEL[kind] : "Class today"));
+    if (booked) top.appendChild(el("span", "cbook", "Booked"));
+    pad.appendChild(top);
+    pad.appendChild(el(big ? "h2" : "h3", null, name));
+    var meta = el("div", "cmeta");
+    meta.appendChild(el("span", "ctime", e.tm));
+    if (e.where) meta.appendChild(el("span", "cwhere", e.where));
+    pad.appendChild(meta);
+    if (e.note) pad.appendChild(el("p", "muted", e.note));
+    if (withLine) { var L = CLASS_LINES[kind]; pad.appendChild(el("p", "quote", L[dayNum() % L.length])); }
+    card.appendChild(pad);
+    if (withNext) { var nr = nextRow(); if (nr) card.appendChild(nr); }
+    return card;
   }
 
   // No lift or extra session on today's date, and nothing running.
@@ -962,24 +1039,26 @@ input.w { width: 88px; } input.r { width: 64px; } input.s { width: 200px; max-wi
     var card = el("section", "card rest");
     var pad = el("div", "pad");
     pad.appendChild(el("h2", null, "Rest day"));
-    var n = Math.floor(parseISO(today).getTime() / 86400000);
-    pad.appendChild(el("p", "quote", REST_LINES[n % REST_LINES.length]));
+    pad.appendChild(el("p", "quote", REST_LINES[dayNum() % REST_LINES.length]));
     card.appendChild(pad);
-    // One line to the next session, which opens it if you want to train early.
+    var nr = nextRow(); if (nr) card.appendChild(nr);
+    return card;
+  }
+
+  // One line to the next lift, which opens it if you want to train early.
+  function nextRow() {
     var nx = nowPick;
     var nxDate = nx && !nx.extra ? liftDate(nx.week, nx.lift) : null;
     var nxDef = nx && !nx.extra ? SESS[nx.lift][nx.week - 1] : null;
-    if (nxDate && iso(nxDate) >= today && nxDef && !nxDef.off) {
-      var b = el("button", "nextrow"); b.type = "button";
-      var t = el("span", "nt");
-      t.appendChild(el("span", "eyebrow", "Next · " + longDay(nxDate)));
-      t.appendChild(el("span", "nn", LIFT_META[nx.lift].label + " · " + (nxDef.travel ? "Travel session" : LIFT_META[nx.lift].title)));
-      b.appendChild(t);
-      b.appendChild(el("span", "chev", "›"));
-      b.addEventListener("click", function () { sel = { week: nx.week, lift: nx.lift }; render(); window.scrollTo(0, 0); });
-      card.appendChild(b);
-    }
-    return card;
+    if (!(nxDate && iso(nxDate) >= today && nxDef && !nxDef.off)) return null;
+    var b = el("button", "nextrow"); b.type = "button";
+    var t = el("span", "nt");
+    t.appendChild(el("span", "eyebrow", "Next lift · " + longDay(nxDate)));
+    t.appendChild(el("span", "nn", LIFT_META[nx.lift].label + " · " + (nxDef.travel ? "Travel session" : LIFT_META[nx.lift].title)));
+    b.appendChild(t);
+    b.appendChild(el("span", "chev", "›"));
+    b.addEventListener("click", function () { sel = { week: nx.week, lift: nx.lift }; render(); window.scrollTo(0, 0); });
+    return b;
   }
 
   function renderSession(pick) {
