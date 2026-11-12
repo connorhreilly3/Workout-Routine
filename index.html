@@ -697,16 +697,25 @@ input.w { width: 88px; } input.r { width: 64px; } input.s { width: 200px; max-wi
 
   var DOW = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
 
+  // Tennis clinic by block week. Default is Wednesday evening; a week listed here
+  // moves it (day: 0 = Mon ... 5 = Sat) and/or sets the booked time. skip: true hides it.
+  var TENNIS_DEFAULT = { day: 2, tm: "evening, time varies" };
+  var TENNIS = {
+    1: { day: 3, tm: "6:30–8:00 PM", booked: true }
+  };
+
   function dayEntries(w) {
     var d = [
       [{ kind: "lift", lift: 1 }],
       [{ kind: "class", name: "Boxing · Rhythm & Rounds", tm: "7:00 AM", where: "Fitler Club" }],
-      [{ kind: "class", name: "Tennis clinic", tm: "evening, time varies", where: "Wharton Tennis Club" }],
+      [],
       [{ kind: "lift", lift: 2 }],
       [{ kind: "class", name: "Mat Pilates x Strength", tm: "9:00 AM", where: "Fitler Club" }, { kind: "lift", lift: 3 }],
       [{ kind: "lift", lift: 4 }],
       [{ kind: "off", name: "Off" }]
     ];
+    var tn = Object.assign({}, TENNIS_DEFAULT, TENNIS[w] || {});
+    if (!tn.skip) d[tn.day].push({ kind: "class", name: tn.booked ? "Tennis clinic · booked" : "Tennis clinic", tm: tn.tm, where: "Wharton Tennis Club" });
     if (w === 2) {
       d[3].push({ kind: "note", name: "Fly to SFO at 4:05 PM" });
       d[4] = [{ kind: "travel", name: "Napa", note: "Travel session or a long hike" }, { kind: "lift", lift: 3 }];
@@ -718,7 +727,7 @@ input.w { width: 88px; } input.r { width: 64px; } input.s { width: 200px; max-wi
       d[3].unshift({ kind: "note", name: "Thanksgiving" });
     }
     if (w === 5) {
-      d[2][0].note = "If you're still in town";
+      if (d[2][0]) d[2][0].note = "If you're still in town";
       d[3] = [{ kind: "travel", name: "Fly to Puerto Natales", note: "Land by 3:30 PM" }];
       d[4] = [{ kind: "travel", name: "O Circuit trek" }];
       d[5] = [{ kind: "travel", name: "O Circuit trek" }];
