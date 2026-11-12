@@ -155,9 +155,6 @@ p { margin: 0; }
 .chip.lift { background: var(--accent-soft); border-color: transparent; }
 .chip.travel { border-style: dashed; }
 .rest .pad { gap: 12px; }
-.cd { display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; }
-.cdn { font-family: var(--display); font-weight: 800; font-size: 64px; line-height: 0.9; color: var(--accent); font-variant-numeric: tabular-nums; }
-.cdl { font-family: var(--display); font-weight: 800; font-size: 22px; line-height: 1.05; text-transform: uppercase; }
 .quote { font-size: 17px; line-height: 1.45; }
 .nextrow { width: 100%; display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 14px 16px; min-height: 64px; border: none; border-top: 1px solid var(--line); background: var(--sunk); text-align: left; cursor: pointer; color: var(--ink); }
 .nextrow .nt { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
@@ -463,8 +460,6 @@ input.w { width: 88px; } input.r { width: 64px; } input.s { width: 200px; max-wi
   var TM_PLAN = { squat: 305, bench: 270, trap: 405, press: 185, clean: 205 };
   var ONE_RM = Object.assign({}, ONE_RM_PLAN, recall("wr-1rm") || {});
   var TM = Object.assign({}, TM_PLAN, recall("wr-tm") || {});
-  // Rest days count down to this.
-  var GOAL = { label: "Puerto Natales", date: "2026-12-10" };
   var TM_NAMES = { squat: "Back squat", bench: "Bench press", trap: "Trap bar deadlift", press: "Strict press", clean: "Power clean" };
   var BARBELL = { squat: true, bench: true, press: true, clean: true };
 
@@ -935,30 +930,23 @@ input.w { width: 88px; } input.r { width: 64px; } input.s { width: 200px; max-wi
 
   // Short lines for rest days; one per date, so it changes daily.
   var REST_LINES = [
-    "Rest is part of the program. Today's job is to recover.",
-    "Strength is built in the work and banked in the rest.",
-    "Eat well, sleep early, take a long walk. That's today's session.",
-    "Easy days are what make the hard days count.",
-    "Muscles grow on the days off. Let them.",
-    "Hydrate, stretch, get to bed on time. Tomorrow's lift will thank you.",
-    "A walk with a loaded pack counts as rest-day homework.",
-    "Consistency beats intensity. You're right on schedule.",
-    "Recovery is a skill. Practice it today.",
-    "The trail rewards the rested."
+    "Your muscles are busy growing today. Don't interrupt them.",
+    "Today's workout: lifting the remote. Moderate weight, high reps.",
+    "The barbell will still be heavy tomorrow. Promise.",
+    "If anyone asks, you're \"actively recovering.\"",
+    "Your quads filed for a day off. Request approved.",
+    "A nap counts as cardio if you dream about running.",
+    "Today's PR attempt: eight hours of sleep.",
+    "The foam roller has been asking about you. Maybe call it back.",
+    "Eat the protein. Fold the laundry. Feel strong about both.",
+    "The gym misses you. Let it.",
+    "Hydrate like it's your job. It isn't, but commit to the bit.",
+    "Skipping the gym is only a crime on lift days. You're in the clear."
   ];
   function renderRest() {
     var card = el("section", "card rest");
     var pad = el("div", "pad");
-    pad.appendChild(el("div", "eyebrow", "Rest day"));
-    var days = GOAL ? Math.round((parseISO(GOAL.date) - parseISO(today)) / 86400000) : -1;
-    if (days > 0) {
-      var cd = el("div", "cd");
-      cd.appendChild(el("span", "cdn", String(days)));
-      cd.appendChild(el("span", "cdl", (days === 1 ? "day" : "days") + " until " + GOAL.label));
-      pad.appendChild(cd);
-    } else {
-      pad.appendChild(el("h2", null, "Recover"));
-    }
+    pad.appendChild(el("h2", null, "Rest day"));
     var n = Math.floor(parseISO(today).getTime() / 86400000);
     pad.appendChild(el("p", "quote", REST_LINES[n % REST_LINES.length]));
     card.appendChild(pad);
