@@ -372,6 +372,7 @@ input.w { width: 88px; } input.r { width: 64px; } input.s { width: 200px; max-wi
 .tmnote { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 12px; padding: 0 16px 12px; font-size: 13px; color: var(--muted); }
 .usebtn { min-height: 36px; padding: 0 12px; border-radius: 999px; border: none; background: var(--accent); color: var(--accent-ink); font-weight: 700; font-size: 13px; cursor: pointer; }
 .tmreset { font-size: 13px; }
+.appver { font-size: 12px; color: var(--muted); text-align: center; }
 .rules { margin: 0; padding: 0 16px 16px 34px; display: flex; flex-direction: column; gap: 8px; font-size: 15px; }
 .src { font-size: 13px; color: var(--muted); padding: 0 16px 16px; }
 @media (prefers-reduced-motion: no-preference) { .sck, .dot, .donepill, .tb { transition: background-color .12s, color .12s, border-color .12s; } }
@@ -463,6 +464,8 @@ input.w { width: 88px; } input.r { width: 64px; } input.s { width: 200px; max-wi
   var TM_PLAN = { squat: 305, bench: 270, trap: 405, press: 185, clean: 205 };
   var ONE_RM = Object.assign({}, ONE_RM_PLAN, recall("wr-1rm") || {});
   var TM = Object.assign({}, TM_PLAN, recall("wr-tm") || {});
+  // Shown at the bottom of the Maxes tab; bump it with every update so it's easy to tell which version a phone has.
+  var APP_VERSION = "11 · Nov 11, 11:20 PM";
   var TM_NAMES = { squat: "Back squat", bench: "Bench press", trap: "Trap bar deadlift", press: "Strict press", clean: "Power clean" };
   var BARBELL = { squat: true, bench: true, press: true, clean: true };
 
@@ -1990,6 +1993,7 @@ input.w { width: 88px; } input.r { width: 64px; } input.s { width: 200px; max-wi
     rc.appendChild(ul);
     rc.appendChild(el("p", "src", "Built from Spring Training (percentage progressions, core series), 4 Horsemen (light–heavy–test waves), HIIB 100 and HIBB (10 × 10 and interval formats), and PPSA Pool Season / The Mullet (main lift, then high-rep supersets; fill in your weights)."));
     viewEl.appendChild(rc);
+    viewEl.appendChild(el("p", "appver", "App version " + APP_VERSION));
   }
 
   // Saves a training max (and, when accepting a test result, the new 1RM) on this phone.
