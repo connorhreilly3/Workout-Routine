@@ -160,10 +160,8 @@ p { margin: 0; }
 .chip.lift { background: var(--accent-soft); border-color: transparent; }
 .chip.travel { border-style: dashed; }
 .rest .pad { gap: 12px; }
-.hype { border-radius: 14px; padding: 16px; background: var(--accent); color: var(--accent-ink); display: flex; flex-direction: column; gap: 10px; }
+.hype { border-radius: 14px; padding: 16px; background: var(--accent); color: var(--accent-ink); }
 .hype-line { font-family: var(--display); font-weight: 800; font-size: 32px; line-height: 1; text-transform: uppercase; text-wrap: balance; letter-spacing: 0.01em; }
-.hype-stats { display: flex; flex-wrap: wrap; gap: 6px; }
-.hype-stats span { padding: 4px 10px; border-radius: 999px; background: rgba(255,255,255,.2); font-size: 13px; font-weight: 600; }
 .card.classcard { border-top: 4px solid var(--class); }
 .classcard .pad { gap: 6px; }
 .classcard.big .pad { gap: 12px; }
@@ -482,7 +480,7 @@ input.w { width: 88px; } input.r { width: 64px; } input.s { width: 200px; max-wi
   var ONE_RM = Object.assign({}, ONE_RM_PLAN, recall("wr-1rm") || {});
   var TM = Object.assign({}, TM_PLAN, recall("wr-tm") || {});
   // Shown at the bottom of the Maxes tab; bump it with every update so it's easy to tell which version a phone has.
-  var APP_VERSION = "13 · Nov 12";
+  var APP_VERSION = "14 · Nov 13";
   var TM_NAMES = { squat: "Back squat", bench: "Bench press", trap: "Trap bar deadlift", press: "Strict press", clean: "Power clean" };
   var BARBELL = { squat: true, bench: true, press: true, clean: true };
 
@@ -965,7 +963,7 @@ input.w { width: 88px; } input.r { width: 64px; } input.s { width: 200px; max-wi
     viewEl.appendChild(renderSession(nowPick));
   }
 
-  // Hype banner at the top of Today: a line for the kind of day, plus real progress numbers.
+  // Hype banner at the top of Today: one line for the kind of day.
   var HYPE = {
     lift: [
       "Lift like the plates owe you money.",
@@ -994,54 +992,7 @@ input.w { width: 88px; } input.r { width: 64px; } input.s { width: 200px; max-wi
     var L = HYPE[kind];
     var card = el("section", "hype");
     card.appendChild(el("div", "hype-line", L[dayNum() % L.length]));
-    var stats = [];
-    if (te && te.week) {
-      var planned = 0, done = 0;
-      for (var l = 1; l <= 4; l++) {
-        var s = SESS[l][te.week - 1];
-        if (!s || s.off) continue;
-        planned++;
-        var lg = logs[docId(te.week, l)];
-        if (lg && lg.done) done++;
-      }
-      if (planned) stats.push("Week " + te.week + " · " + done + " of " + planned + " lifts done");
-    }
-    var total = Object.keys(logs).filter(function (k) { return logs[k] && logs[k].done; }).length;
-    if (total) stats.push(total + (total === 1 ? " session" : " sessions") + " in the books");
-    var top = noLift ? null : topSetToday();
-    if (top) stats.push("Top set " + top.w + " lb" + (top.best ? " · heaviest " + top.name + " yet" : ""));
-    if (stats.length) {
-      var st = el("div", "hype-stats");
-      stats.forEach(function (t) { st.appendChild(el("span", null, t)); });
-      card.appendChild(st);
-    }
     return card;
-  }
-  // Heaviest planned barbell set in today's session, and whether it beats anything logged so far.
-  function topSetToday() {
-    var p = nowPick;
-    if (!p || p.extra || iso(liftDate(p.week, p.lift)) !== today) return null;
-    var s = SESS[p.lift][p.week - 1];
-    if (!s || !s.blocks) return null;
-    var id = docId(p.week, p.lift), best = null;
-    s.blocks.forEach(function (b) {
-      b.items.forEach(function (it) {
-        if (!it.main || !it.sets) return;
-        expandSets(it).forEach(function (st) {
-          if (st.bo) return;
-          var w = load(it.main, st.p);
-          if (!best || w > best.w) best = { w: w, main: it.main };
-        });
-      });
-    });
-    if (!best) return null;
-    var prior = 0;
-    Object.keys(logs).forEach(function (k) {
-      if (k === id) return;
-      var v = ((logs[k] || {}).items || {})[best.main];
-      ((v && v.sets) || []).forEach(function (w) { if (w > prior) prior = w; });
-    });
-    return { w: best.w, name: TM_NAMES[best.main].toLowerCase(), best: prior > 0 && best.w > prior };
   }
 
   // Funny lines for class days, by class; one per date.
