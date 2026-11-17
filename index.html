@@ -480,7 +480,7 @@ input.w { width: 88px; } input.r { width: 64px; } input.s { width: 200px; max-wi
   var ONE_RM = Object.assign({}, ONE_RM_PLAN, recall("wr-1rm") || {});
   var TM = Object.assign({}, TM_PLAN, recall("wr-tm") || {});
   // Shown at the bottom of the Maxes tab; bump it with every update so it's easy to tell which version a phone has.
-  var APP_VERSION = "14 · Nov 13";
+  var APP_VERSION = "15 · Nov 17";
   var TM_NAMES = { squat: "Back squat", bench: "Bench press", trap: "Trap bar deadlift", press: "Strict press", clean: "Power clean" };
   var BARBELL = { squat: true, bench: true, press: true, clean: true };
 
@@ -572,7 +572,7 @@ input.w { width: 88px; } input.r { width: 64px; } input.s { width: 200px; max-wi
           { k: "pullup", n: "Neutral-grip pull-up", rx: "3 × 6–8", log: "load" } ] },
         { t: "D", name: "Finisher · 8 min", rest: "", items: [
           { k: "fin", n: "AMRAP 8", rx: "", note: "8 DB push press, 10/8 cal Ski erg, 10 hanging knee raises.", log: "score", ph: "rounds + reps", timer: { type: "amrap", min: 8 } } ] } ] },
-      { note: "Fly to SFO at 4:05 PM. Pack the night before.", blocks: [
+      { day: 2, note: "Moved up to Wednesday. Out by 8:00 for class at 8:30.", blocks: [
         { t: "A", name: "Power", rest: "Rest 2 min", items: [
           { k: "clean", n: "Power clean", main: "clean", sets: S(5,2,75), log: "top" } ] },
         { t: "B", name: "Superset × 4", rest: "Rest 2 min after the pair", items: [
@@ -619,7 +619,19 @@ input.w { width: 88px; } input.r { width: 64px; } input.s { width: 200px; max-wi
           { k: "rdf", n: "Rear-delt fly", rx: "3 × 15" } ] },
         { t: "D", name: "Recovery", rest: "", items: [
           { k: "sauna", n: "Sauna", rx: "15 min", note: "About 160°F. Water before and after." } ] } ] },
-      { travel: true },
+      { day: 3, warm: "3 min easy bike. Band pull-apart × 20, then go.",
+        note: "Moved up to Thursday, before your 4:05 PM flight. Out by 7:45 for class.", blocks: [
+        { t: "A", name: "100 reps · superset 10 × 10", rest: "Rest 60 sec after each pair", items: [
+          { k: "hp", n: "DB low-incline press", rx: "10 × 10", note: "Try 65s (60s last week). Same weight all 10 sets; get all 100 reps.", log: "load" },
+          { k: "hpull", n: "Neutral-grip lat pulldown", rx: "10 × 10", note: "Try 145 (140 last week).", log: "load" } ] },
+        { t: "B", name: "Arms · superset × 3", rest: "Rest 45 sec", items: [
+          { k: "curl", n: "EZ-bar cable curl", rx: "3 × 21s", note: "7 bottom half, 7 top half, 7 full.", log: "load" },
+          { k: "tri", n: "Rope pushdown", rx: "3 × 15", log: "load" } ] },
+        { t: "C", name: "Shoulders · superset × 3", rest: "Rest 45 sec", items: [
+          { k: "lat", n: "DB lateral raise", rx: "3 × 15", log: "load" },
+          { k: "rdf", n: "Cable face pull", rx: "3 × 20" } ] },
+        { t: "D", name: "Recovery", rest: "", items: [
+          { k: "sauna", n: "Sauna", rx: "15 min", note: "Skip it if you're short on time before class." } ] } ] },
       { blocks: [
         { t: "A", name: "100 reps · superset 10 × 10", rest: "Rest 60 sec after each pair", items: [
           { k: "hp", n: "Dips", rx: "10 × 10", note: "Bodyweight. Break sets up if you need to, but get 100.", log: "load" },
@@ -657,7 +669,18 @@ input.w { width: 88px; } input.r { width: 64px; } input.s { width: 200px; max-wi
           { k: "suit", n: "Suitcase carry", rx: "3 × 30 yd each side" } ] },
         { t: "D", name: "Metcon · 18 min", rest: "", items: [
           { k: "metcon", n: "18-min AMRAP", rx: "", note: "12/10 cal Echo bike, 12 KB swings (53 lb), 10 push-ups, 8 burpees.", log: "score", ph: "rounds + reps", timer: { type: "amrap", min: 18 } } ] } ] },
-      { travel: true },
+      { warm: "5 min easy elliptical. 2 rounds: hip airplane × 5 each side, light DB RDL × 10, walking lunge × 10.",
+        note: "Napa hotel gym and a hill. No trap bar, so the hinge is dumbbell RDLs and the conditioning is hill sprints.", blocks: [
+        { t: "A", name: "Strength", rest: "Rest 2 min", items: [
+          { k: "rdl", n: "DB Romanian deadlift", rx: "4 × 8", note: "Try 70s. 3-second lower, pause at the stretch. If 8 is easy, switch to single-leg RDL 4 × 8 each leg.", log: "load" } ] },
+        { t: "B", name: "Trek prep · superset × 3", rest: "Rest 60–90 sec", items: [
+          { k: "stepup", n: "DB step-up onto bench", rx: "3 × 10 each leg", log: "load" },
+          { k: "farmer", n: "Farmer carry", rx: "3 × 40 yd", note: "70s.", log: "load" } ] },
+        { t: "C", name: "Core · superset × 3", rest: "Rest 45 sec", items: [
+          { k: "tgu", n: "Turkish get-up", rx: "3 × 2 each side", note: "Light DB.", log: "load" },
+          { k: "suit", n: "Cable Pallof press", rx: "3 × 10 each side" } ] },
+        { t: "D", name: "Hill sprints · about 15 min", rest: "", items: [
+          { k: "metcon", n: "8 hill sprints", rx: "", note: "15–20 sec hard uphill, walk back down (about 70 sec). Then 5 min easy elliptical. Sauna after if you have time.", log: "score", ph: "sprints done", timer: { type: "intervals", work: 20, rest: 70, rounds: 8, labels: ["Sprint uphill"], restLabel: "Walk down" } } ] } ] },
       { blocks: [
         { t: "A", name: "Strength", rest: "Rest 2½ min", items: [
           { k: "trap", n: "Trap bar deadlift", main: "trap", sets: [[3,70],[3,75],[3,80],[3,80]], note: "Napa took last Saturday, so this tops out at 80%.", log: "top" } ] },
@@ -716,7 +739,8 @@ input.w { width: 88px; } input.r { width: 64px; } input.s { width: 200px; max-wi
   // moves it (day: 0 = Mon ... 5 = Sat) and/or sets the booked time. skip: true hides it.
   var TENNIS_DEFAULT = { day: 2, tm: "evening, time varies" };
   var TENNIS = {
-    1: { day: 3, tm: "6:30–8:00 PM", booked: true }
+    1: { day: 3, tm: "6:30–8:00 PM", booked: true },
+    2: { skip: true }
   };
 
   function dayEntries(w) {
@@ -733,7 +757,7 @@ input.w { width: 88px; } input.r { width: 64px; } input.s { width: 200px; max-wi
     if (!tn.skip) d[tn.day].push({ kind: "class", name: tn.booked ? "Tennis clinic · booked" : "Tennis clinic", tm: tn.tm, where: "Wharton Tennis Club", booked: !!tn.booked });
     if (w === 2) {
       d[3].push({ kind: "note", name: "Fly to SFO at 4:05 PM" });
-      d[4] = [{ kind: "travel", name: "Napa", note: "Travel session or a long hike" }, { kind: "lift", lift: 3 }];
+      d[4] = [{ kind: "travel", name: "Napa", note: "A long hike counts" }, { kind: "lift", lift: 3 }];
       d[5] = [{ kind: "travel", name: "Napa" }, { kind: "lift", lift: 4 }];
       d[6] = [{ kind: "travel", name: "Napa", note: "Off" }];
     }
@@ -809,6 +833,9 @@ input.w { width: 88px; } input.r { width: 64px; } input.s { width: 200px; max-wi
     var m = lg.done && lg.doneAt ? etDate(lg.doneAt) : lg.moved;
     if (m) { var d = Math.round((parseISO(m) - parseISO(WEEKS[w - 1].start)) / 86400000); if (d >= 0 && d <= 5) return d; }
     if (lg.moved) { var d2 = Math.round((parseISO(lg.moved) - parseISO(WEEKS[w - 1].start)) / 86400000); if (d2 >= 0 && d2 <= 5) return d2; }
+    // Then a day set on the session itself in the plan (day: 0 = Mon ... 5 = Sat).
+    var ps = SESS[l] && SESS[l][w - 1];
+    if (ps && ps.day != null) return ps.day;
     return LIFT_META[l].day;
   }
   function etDate(ts) { try { return new Intl.DateTimeFormat("en-CA", { timeZone: "America/New_York", year: "numeric", month: "2-digit", day: "2-digit" }).format(new Date(ts)); } catch (e) { return String(ts).slice(0, 10); } }
@@ -1124,7 +1151,7 @@ input.w { width: 88px; } input.r { width: 64px; } input.s { width: 200px; max-wi
     if (!isTravel) {
       var d = el("details", "warm"); d.open = true;
       d.appendChild(el("summary", null, "Warm-up"));
-      d.appendChild(el("p", null, meta.warm));
+      d.appendChild(el("p", null, (s && s.warm) || meta.warm));
       card.appendChild(d);
     }
     if (s.test) card.appendChild(el("div", "callout test", "Test day. Rest fully between singles. A missed rep costs more than a skipped attempt."));
