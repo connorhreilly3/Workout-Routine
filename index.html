@@ -480,14 +480,14 @@ input.w { width: 88px; } input.r { width: 64px; } input.s { width: 200px; max-wi
   var ONE_RM = Object.assign({}, ONE_RM_PLAN, recall("wr-1rm") || {});
   var TM = Object.assign({}, TM_PLAN, recall("wr-tm") || {});
   // Shown at the bottom of the Maxes tab; bump it with every update so it's easy to tell which version a phone has.
-  var APP_VERSION = "15 · Nov 17";
+  var APP_VERSION = "16 · Nov 17";
   var TM_NAMES = { squat: "Back squat", bench: "Bench press", trap: "Trap bar deadlift", press: "Strict press", clean: "Power clean" };
   var BARBELL = { squat: true, bench: true, press: true, clean: true };
 
   var WEEKS = [
     { n: 1, start: "2026-11-09", phase: "Base", intent: "Moderate loads. Leave about two reps in the tank on every set and dial in your working weights." },
     { n: 2, start: "2026-11-16", phase: "Build", intent: "Heavier, fewer reps. You fly to SFO Thursday afternoon, so Friday and Saturday are the travel session in Napa." },
-    { n: 3, start: "2026-11-23", phase: "Build", intent: "Top of the build. Thanksgiving week: Sunday's run places the lifts around where you are." },
+    { n: 3, start: "2026-11-23", phase: "Build", intent: "Top of the build, in Tucson for Thanksgiving. Lifts Tuesday, Wednesday, Friday and Saturday at 9:00 AM Arizona time." },
     { n: 4, start: "2026-11-30", phase: "Test", test: true, intent: "Heavy singles on squat, bench and trap bar. Take a PR single only if 95% moves fast. These numbers set January's maxes." },
     { n: 5, start: "2026-12-07", phase: "Taper", intent: "One light lift Monday, then you fly to Puerto Natales. The trek is your deload." }
   ];
@@ -530,7 +530,8 @@ input.w { width: 88px; } input.r { width: 64px; } input.s { width: 200px; max-wi
           { k: "hamcurl", n: "Stability-ball hamstring curl", rx: "2 × 12" } ] },
         { t: "D", name: "Finisher · 10 min", rest: "", items: [
           { k: "fin", n: "4 rounds", rx: "", note: "250 m Ski erg + 15 KB swings (53 lb). Rest 45 seconds between rounds.", log: "score", ph: "total time", timer: { type: "fortime", cap: 10, rounds: true } } ] } ] },
-      { blocks: [
+      { day: 1, warm: "3 min easy bike. Then 2 rounds: goblet squat × 8, empty-bar RDL × 10, band pull-apart × 15.",
+        note: "Tucson, 9:00 AM Arizona time. Moved to Tuesday because you're in Napa through Monday.", blocks: [
         { t: "A", name: "Strength", rest: "Rest 3 min", items: [
           { k: "squat", n: "Back squat", main: "squat", sets: [[3,75],[3,80],[3,85],[3,85]], log: "top" } ] },
         { t: "B", name: "Superset × 3", rest: "Rest 90 sec after the pair", items: [
@@ -583,7 +584,8 @@ input.w { width: 88px; } input.r { width: 64px; } input.s { width: 200px; max-wi
           { k: "pullup", n: "Neutral-grip pull-up", rx: "3 × 6", note: "Add weight if 8 was easy last week.", log: "load" } ] },
         { t: "D", name: "Finisher · 8 min", rest: "", items: [
           { k: "fin", n: "4 rounds", rx: "", note: "40 sec hard Echo bike, 20 sec rest, 40 sec hollow rocks, 20 sec rest.", log: "score", ph: "total cals", timer: { type: "intervals", work: 40, rest: 20, rounds: 8, labels: ["Echo bike · hard", "Hollow rocks"] } } ] } ] },
-      { blocks: [
+      { day: 2, warm: "3 min easy Ski erg (or rower). Empty-bar clean complex × 5, twice (RDL, hang pull, front squat, press). Band pull-apart × 15.",
+        note: "Tucson, 9:00 AM Arizona time. Moved to Wednesday because Thursday is Thanksgiving.", blocks: [
         { t: "A", name: "Power", rest: "Rest 2 min", items: [
           { k: "clean", n: "Power clean", main: "clean", sets: S(5,2,80), log: "top" } ] },
         { t: "B", name: "Superset × 4", rest: "Rest 2–2½ min after the pair", items: [
@@ -632,7 +634,8 @@ input.w { width: 88px; } input.r { width: 64px; } input.s { width: 200px; max-wi
           { k: "rdf", n: "Cable face pull", rx: "3 × 20" } ] },
         { t: "D", name: "Recovery", rest: "", items: [
           { k: "sauna", n: "Sauna", rx: "15 min", note: "Skip it if you're short on time before class." } ] } ] },
-      { blocks: [
+      { warm: "5 min easy bike. Band pull-apart × 20, 10 push-ups, 10 band rows.",
+        note: "Tucson, 9:00 AM Arizona time. No Pilates this week, so do the full warm-up.", blocks: [
         { t: "A", name: "100 reps · superset 10 × 10", rest: "Rest 60 sec after each pair", items: [
           { k: "hp", n: "Dips", rx: "10 × 10", note: "Bodyweight. Break sets up if you need to, but get 100.", log: "load" },
           { k: "hpull", n: "Seated cable row", rx: "10 × 10", log: "load" } ] },
@@ -681,7 +684,7 @@ input.w { width: 88px; } input.r { width: 64px; } input.s { width: 200px; max-wi
           { k: "suit", n: "Cable Pallof press", rx: "3 × 10 each side" } ] },
         { t: "D", name: "Hill sprints · about 15 min", rest: "", items: [
           { k: "metcon", n: "8 hill sprints", rx: "", note: "15–20 sec hard uphill, walk back down (about 70 sec). Then 5 min easy elliptical. Sauna after if you have time.", log: "score", ph: "sprints done", timer: { type: "intervals", work: 20, rest: 70, rounds: 8, labels: ["Sprint uphill"], restLabel: "Walk down" } } ] } ] },
-      { blocks: [
+      { note: "Tucson, 9:00 AM Arizona time.", blocks: [
         { t: "A", name: "Strength", rest: "Rest 2½ min", items: [
           { k: "trap", n: "Trap bar deadlift", main: "trap", sets: [[3,70],[3,75],[3,80],[3,80]], note: "Napa took last Saturday, so this tops out at 80%.", log: "top" } ] },
         { t: "B", name: "Trek prep · superset × 3", rest: "Rest 60–90 sec", items: [
@@ -740,7 +743,8 @@ input.w { width: 88px; } input.r { width: 64px; } input.s { width: 200px; max-wi
   var TENNIS_DEFAULT = { day: 2, tm: "evening, time varies" };
   var TENNIS = {
     1: { day: 3, tm: "6:30–8:00 PM", booked: true },
-    2: { skip: true }
+    2: { skip: true },
+    3: { skip: true }
   };
 
   function dayEntries(w) {
@@ -762,8 +766,14 @@ input.w { width: 88px; } input.r { width: 64px; } input.s { width: 200px; max-wi
       d[6] = [{ kind: "travel", name: "Napa", note: "Off" }];
     }
     if (w === 3) {
-      d[0].unshift({ kind: "travel", name: "Napa through Monday", note: "Lift 1 moves if you're still away" });
-      d[3].unshift({ kind: "note", name: "Thanksgiving" });
+      // Napa through Monday, then Tucson with a full gym. No Fitler classes or tennis.
+      d[0] = [{ kind: "travel", name: "Napa", note: "Fly to Tucson, 3:10 PM PT" }, { kind: "lift", lift: 1 }];
+      d[1] = [{ kind: "travel", name: "Tucson" }];
+      d[2] = [{ kind: "travel", name: "Tucson" }];
+      d[3] = [{ kind: "travel", name: "Tucson" }, { kind: "note", name: "Thanksgiving" }, { kind: "lift", lift: 2 }];
+      d[4] = [{ kind: "travel", name: "Tucson" }, { kind: "lift", lift: 3 }];
+      d[5] = [{ kind: "travel", name: "Tucson" }, { kind: "lift", lift: 4 }];
+      d[6] = [{ kind: "travel", name: "Tucson", note: "Off" }];
     }
     if (w === 5) {
       if (d[2][0]) d[2][0].note = "If you're still in town";
