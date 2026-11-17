@@ -115,6 +115,7 @@ p { margin: 0; }
 .top-in { max-width: 560px; margin: 0 auto; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); padding-block: 10px; display: flex; align-items: center; justify-content: space-between; gap: 12px; }
 .brand { display: flex; flex-direction: column; min-width: 0; }
 .brand .t { font-family: var(--display); font-weight: 800; font-size: 22px; line-height: 1; text-transform: uppercase; }
+.brand .t .td { margin-left: 10px; font-family: var(--body); font-size: 14px; font-weight: 600; letter-spacing: 0; text-transform: none; color: var(--muted); }
 .save { font-size: 12px; color: var(--muted); text-align: right; }
 .sv { display: flex; flex-direction: column; align-items: flex-end; gap: 2px; flex: 0 0 auto; }
 .syncbtn { background: none; border: none; padding: 2px 0; font: inherit; font-size: 12px; font-weight: 600; color: var(--muted); cursor: pointer; text-align: right; min-height: 24px; }
@@ -158,7 +159,7 @@ p { margin: 0; }
 .chip { display: inline-flex; align-items: center; gap: 6px; padding: 6px 10px; border-radius: 999px; background: var(--surface); border: 1px solid var(--line); font-size: 13px; }
 .chip .k { font-size: 10px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); }
 .chip.lift { background: var(--accent-soft); border-color: transparent; }
-.chip.travel { border-style: dashed; }
+.chip.travel { font-weight: 600; }
 .rest .pad { gap: 12px; }
 .hype { border-radius: 14px; padding: 16px; background: var(--accent); color: var(--accent-ink); }
 .hype-line { font-family: var(--display); font-weight: 800; font-size: 32px; line-height: 1; text-transform: uppercase; text-wrap: balance; letter-spacing: 0.01em; }
@@ -202,6 +203,10 @@ details.warm p { padding: 0 16px 14px; font-size: 15px; }
 .iname { display: flex; flex-wrap: wrap; align-items: baseline; gap: 2px 10px; }
 .iname .nm { font-weight: 700; font-size: 17px; }
 .iname .rx { font-family: var(--mono); font-size: 14px; }
+.nmbtn { background: none; border: none; padding: 0; color: inherit; text-align: left; cursor: pointer; text-decoration: underline dotted; text-decoration-color: var(--muted); text-underline-offset: 4px; }
+.cues { margin: 0; padding: 10px 14px 10px 32px; border-radius: 12px; background: var(--sunk); border: 1px solid var(--line); display: flex; flex-direction: column; gap: 6px; font-size: 14px; line-height: 1.4; }
+.cues[hidden] { display: none; }
+.cues li::marker { color: var(--accent); font-weight: 700; }
 .inote { font-size: 14px; color: var(--muted); }
 
 /* Barbell set table (Sets · Reps · Lb · ✓) */
@@ -209,13 +214,37 @@ details.warm p { padding: 0 16px 14px; font-size: 15px; }
 .lastcard .lr { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; padding: 8px 0; font-size: 12px; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); }
 .lastcard .lr + .lr { border-top: 1px solid var(--line); }
 .lastcard .lv { font-family: var(--mono); font-size: 13px; font-weight: 600; letter-spacing: 0; text-transform: none; color: var(--accent); text-align: right; }
+.lastcard .lr > span:first-child { white-space: nowrap; }
+.lrbtn { width: 100%; background: none; border: none; border-top: 1px solid var(--line); margin: 0; font-family: inherit; text-align: left; cursor: pointer; }
+.lastcard > .lrbtn:first-child { border-top: none; }
+.lrbtn .chev { display: inline-block; margin-left: 6px; font-size: 11px; transition: transform .15s; }
+.lrbtn[aria-expanded="true"] .chev { transform: rotate(180deg); }
+.hist { list-style: none; margin: 0; padding: 2px 0 8px; display: flex; flex-direction: column; }
+.hist[hidden] { display: none; }
+.hist li { display: grid; grid-template-columns: 92px 1fr; gap: 10px; padding: 7px 0; border-top: 1px dashed var(--line); font-size: 13px; align-items: baseline; }
+.hist .hd { color: var(--muted); white-space: nowrap; }
+.hist .hv { font-family: var(--mono); font-size: 12.5px; }
+.lh { border-top: 1px solid var(--line); }
+.lh > summary { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; padding: 12px 0; cursor: pointer; list-style: none; }
+.lh > summary::-webkit-details-marker { display: none; }
+.lh > summary .n { font-weight: 700; }
+.lh > summary .n::after { content: "▾"; display: inline-block; margin-left: 6px; font-size: 11px; color: var(--muted); transition: transform .15s; }
+.lh[open] > summary .n::after { transform: rotate(180deg); }
+.lh > summary .c { font-size: 12px; color: var(--muted); font-family: var(--mono); }
+.lh .hist { padding-bottom: 12px; }
+.lhin { padding-left: 12px; }
 .stable { display: flex; flex-direction: column; gap: 8px; }
 .srow { display: grid; grid-template-columns: 34px minmax(0, 1fr) minmax(0, 1fr) 48px; align-items: center; gap: 8px; }
 .shd { font-weight: 700; font-size: 15px; }
 .shd .hp { display: grid; place-items: center; min-height: 36px; border-radius: 8px; background: var(--sunk); color: var(--accent); font-size: 14px; }
 .sn { font-family: var(--mono); font-size: 20px; font-weight: 500; display: flex; flex-direction: column; line-height: 1.05; }
-.sn small { font-size: 10px; color: var(--muted); font-weight: 400; }
-.sn .bo { font-family: var(--body); font-size: 9px; letter-spacing: .04em; text-transform: uppercase; color: var(--muted); }
+.bohd { font-size: 11px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); padding: 4px 0 0 2px; }
+.wbox { position: relative; min-width: 0; }
+.wbox .pct { position: absolute; left: 9px; top: 50%; transform: translateY(-50%); font-family: var(--mono); font-size: 11px; color: var(--muted); pointer-events: none; }
+.wbox.has-pct input.kc { padding-left: 34px; padding-right: 8px; }
+/* Typed numbers stay gray until the row is checked; the box being edited shows full ink. */
+.srow input.kc, .item .log input.kc { color: var(--muted); }
+.srow.ck input.kc, .item.ck .log input.kc, .srow input.kc.on, .item .log input.kc.on { color: var(--ink); }
 input.kc { width: 100%; height: 50px; min-height: 50px; padding: 0 6px; border-radius: 10px; border: 1px solid var(--line); background: var(--surface); color: var(--ink); text-align: center; font-family: var(--mono); font-size: 20px; cursor: pointer; caret-color: transparent; -webkit-user-select: none; user-select: none; }
 input.kc::placeholder { color: var(--muted); opacity: .7; }
 input.kc.on { border: 2px solid var(--accent); }
@@ -325,7 +354,8 @@ input.w { width: 88px; } input.r { width: 64px; } input.s { width: 200px; max-wi
 .kind { font-size: 10px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; padding: 2px 6px; border-radius: 4px; }
 .kind.lift { background: var(--accent); color: var(--accent-ink); }
 .kind.class { background: var(--sunk); color: var(--ink); border: 1px solid var(--line); }
-.kind.travel { color: var(--travel); border: 1px dashed var(--travel); }
+.loc { display: inline-flex; align-items: center; gap: 5px; font-weight: 600; }
+.pin { width: 13px; height: 13px; flex: none; color: var(--muted); }
 .kind.off { color: var(--muted); border: 1px solid var(--line); }
 .entbtn { background: none; border: none; padding: 0; font-weight: 600; cursor: pointer; text-align: left; text-decoration: underline; text-decoration-color: var(--line); text-underline-offset: 3px; min-height: 28px; }
 .bw { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 10px; padding: 14px 16px; border-top: 1px solid var(--line); font-size: 14px; color: var(--muted); }
@@ -480,7 +510,7 @@ input.w { width: 88px; } input.r { width: 64px; } input.s { width: 200px; max-wi
   var ONE_RM = Object.assign({}, ONE_RM_PLAN, recall("wr-1rm") || {});
   var TM = Object.assign({}, TM_PLAN, recall("wr-tm") || {});
   // Shown at the bottom of the Maxes tab; bump it with every update so it's easy to tell which version a phone has.
-  var APP_VERSION = "16 · Nov 17";
+  var APP_VERSION = "17 · Nov 17";
   var TM_NAMES = { squat: "Back squat", bench: "Bench press", trap: "Trap bar deadlift", press: "Strict press", clean: "Power clean" };
   var BARBELL = { squat: true, bench: true, press: true, clean: true };
 
@@ -531,7 +561,7 @@ input.w { width: 88px; } input.r { width: 64px; } input.s { width: 200px; max-wi
         { t: "D", name: "Finisher · 10 min", rest: "", items: [
           { k: "fin", n: "4 rounds", rx: "", note: "250 m Ski erg + 15 KB swings (53 lb). Rest 45 seconds between rounds.", log: "score", ph: "total time", timer: { type: "fortime", cap: 10, rounds: true } } ] } ] },
       { day: 1, warm: "3 min easy bike. Then 2 rounds: goblet squat × 8, empty-bar RDL × 10, band pull-apart × 15.",
-        note: "Tucson, 9:00 AM Arizona time. Moved to Tuesday because you're in Napa through Monday.", blocks: [
+        note: "Tucson, 9:00 AM Arizona time.", blocks: [
         { t: "A", name: "Strength", rest: "Rest 3 min", items: [
           { k: "squat", n: "Back squat", main: "squat", sets: [[3,75],[3,80],[3,85],[3,85]], log: "top" } ] },
         { t: "B", name: "Superset × 3", rest: "Rest 90 sec after the pair", items: [
@@ -573,7 +603,7 @@ input.w { width: 88px; } input.r { width: 64px; } input.s { width: 200px; max-wi
           { k: "pullup", n: "Neutral-grip pull-up", rx: "3 × 6–8", log: "load" } ] },
         { t: "D", name: "Finisher · 8 min", rest: "", items: [
           { k: "fin", n: "AMRAP 8", rx: "", note: "8 DB push press, 10/8 cal Ski erg, 10 hanging knee raises.", log: "score", ph: "rounds + reps", timer: { type: "amrap", min: 8 } } ] } ] },
-      { day: 2, note: "Moved up to Wednesday. Out by 8:00 for class at 8:30.", blocks: [
+      { day: 2, blocks: [
         { t: "A", name: "Power", rest: "Rest 2 min", items: [
           { k: "clean", n: "Power clean", main: "clean", sets: S(5,2,75), log: "top" } ] },
         { t: "B", name: "Superset × 4", rest: "Rest 2 min after the pair", items: [
@@ -585,7 +615,7 @@ input.w { width: 88px; } input.r { width: 64px; } input.s { width: 200px; max-wi
         { t: "D", name: "Finisher · 8 min", rest: "", items: [
           { k: "fin", n: "4 rounds", rx: "", note: "40 sec hard Echo bike, 20 sec rest, 40 sec hollow rocks, 20 sec rest.", log: "score", ph: "total cals", timer: { type: "intervals", work: 40, rest: 20, rounds: 8, labels: ["Echo bike · hard", "Hollow rocks"] } } ] } ] },
       { day: 2, warm: "3 min easy Ski erg (or rower). Empty-bar clean complex × 5, twice (RDL, hang pull, front squat, press). Band pull-apart × 15.",
-        note: "Tucson, 9:00 AM Arizona time. Moved to Wednesday because Thursday is Thanksgiving.", blocks: [
+        note: "Tucson, 9:00 AM Arizona time.", blocks: [
         { t: "A", name: "Power", rest: "Rest 2 min", items: [
           { k: "clean", n: "Power clean", main: "clean", sets: S(5,2,80), log: "top" } ] },
         { t: "B", name: "Superset × 4", rest: "Rest 2–2½ min after the pair", items: [
@@ -621,8 +651,7 @@ input.w { width: 88px; } input.r { width: 64px; } input.s { width: 200px; max-wi
           { k: "rdf", n: "Rear-delt fly", rx: "3 × 15" } ] },
         { t: "D", name: "Recovery", rest: "", items: [
           { k: "sauna", n: "Sauna", rx: "15 min", note: "About 160°F. Water before and after." } ] } ] },
-      { day: 3, warm: "3 min easy bike. Band pull-apart × 20, then go.",
-        note: "Moved up to Thursday, before your 4:05 PM flight. Out by 7:45 for class.", blocks: [
+      { day: 3, warm: "3 min easy bike. Band pull-apart × 20, then go.", blocks: [
         { t: "A", name: "100 reps · superset 10 × 10", rest: "Rest 60 sec after each pair", items: [
           { k: "hp", n: "DB low-incline press", rx: "10 × 10", note: "Try 65s (60s last week). Same weight all 10 sets; get all 100 reps.", log: "load" },
           { k: "hpull", n: "Neutral-grip lat pulldown", rx: "10 × 10", note: "Try 145 (140 last week).", log: "load" } ] },
@@ -747,6 +776,23 @@ input.w { width: 88px; } input.r { width: 64px; } input.s { width: 200px; max-wi
     3: { skip: true }
   };
 
+  // TARGETS (start) ----------
+  // Target weights that fill the default boxes, by session id ("w<week>-l<lift>") and exercise key.
+  // One number = the same weight every set; a list = one weight per set. The Sunday run rewrites this
+  // block for the coming week from last week's logs. Main lifts without an entry use training max × %.
+  var TARGETS = {
+    "w2-l2": { bbrow: [125, 125, 125, 125] },
+    "w2-l3": { hp: 65, hpull: 145 },
+    "w2-l4": { rdl: 70, farmer: 70 }
+  };
+  // TARGETS (end) ----------
+  function targetFor(id, k, i) {
+    var t = TARGETS[id] && TARGETS[id][k];
+    if (t == null) return null;
+    if (!Array.isArray(t)) return t;
+    return i == null ? t[0] : (t[i] != null ? t[i] : t[t.length - 1]);
+  }
+
   function dayEntries(w) {
     var d = [
       [{ kind: "lift", lift: 1 }],
@@ -786,8 +832,7 @@ input.w { width: 88px; } input.r { width: 64px; } input.s { width: 200px; max-wi
       var def = LIFT_META[l].day, now = liftDayIdx(w, l);
       if (def === now) continue;
       for (var j = 0; j < d[def].length; j++) if (d[def][j].kind === "lift" && d[def][j].lift === l) { d[def].splice(j, 1); break; }
-      d[def].push({ kind: "note", name: LIFT_META[l].label + " moved to " + DOW[now] });
-      d[now].push({ kind: "lift", lift: l, moved: true });
+      d[now].push({ kind: "lift", lift: l });
     }
     return d;
   }
@@ -826,11 +871,108 @@ input.w { width: 88px; } input.r { width: 64px; } input.s { width: 200px; max-wi
     });
     return best;
   }
+  // Coaching cues: tap an exercise name to see them. First pattern that matches the name wins.
+  var CUES = [
+    [/power clean/i, ["Start with your shoulders over the bar and the bar touching your shins.", "Push the floor away off the ground, then explode through the hips once the bar passes your knees.", "Keep the bar close the whole way. Fast elbows, catch high with soft knees."]],
+    [/back squat/i, ["Big breath into your belly and brace before you unrack.", "Sit between your heels with knees tracking over your toes.", "Drive the floor away and lead with your chest out of the hole."]],
+    [/bench press|flat db press/i, ["Shoulder blades pinched and down, feet planted.", "Lower to your lower chest with forearms vertical.", "Drive through your legs and press back toward your face."]],
+    [/^strict press/i, ["Squeeze glutes and quads; ribs down, no lean back.", "Bar starts on your front delts with forearms vertical.", "Head back, then push it through once the bar clears your forehead."]],
+    [/trap bar/i, ["Grip the middle of the handles; hips a little higher than a squat.", "Pull the slack out of the bar before it leaves the floor.", "Push the floor away and finish tall with your glutes, not a lean back."]],
+    [/bent-over row/i, ["Hinge to about 45° with a flat back; brace like a deadlift.", "Pull the bar to your lower ribs, elbows back.", "Torso stays still. If you have to heave it, it's too heavy."]],
+    [/chest-supported/i, ["Chest stays on the pad the whole set.", "Drive your elbows toward your hips; pause at the top.", "Let your shoulder blades reach forward at the bottom."]],
+    [/seated cable row/i, ["Sit tall with a slight knee bend.", "Pull to your belly button, elbows past your torso.", "Reach forward at the stretch without rounding."]],
+    [/inverted row/i, ["Body rigid from heels to head.", "Pull your chest to the bar.", "Squeeze your shoulder blades at the top."]],
+    [/chin-up/i, ["Start from a dead hang with your shoulders packed.", "Drive your elbows down to your pockets; chest to the bar.", "Control the lower to straight arms every rep."]],
+    [/pull-up/i, ["Start from a dead hang, shoulders down and back.", "Drive your elbows to your ribs until your chin clears.", "Lower under control to straight arms."]],
+    [/straight-arm/i, ["Slight hinge, arms nearly straight.", "Sweep the bar to your thighs with your lats.", "Control it back up to eye level."]],
+    [/lat pulldown/i, ["Lean back slightly, chest up.", "Pull to your upper chest, elbows down to your ribs.", "Full stretch at the top, under control."]],
+    [/bulgarian/i, ["Back foot laces down; front shin close to vertical.", "Drop the back knee straight down, weight in the front heel.", "Lean forward a little for glutes, stay tall for quads."]],
+    [/step-up/i, ["Whole foot on the box; drive through the heel.", "Stand up with the top leg, not a push off the back foot.", "Control the step down. That's the trek's descents."]],
+    [/romanian|rdl/i, ["Soft knees; push your hips straight back.", "Weights slide down your thighs and stay close.", "Stop at the stretch with a flat back, then squeeze your glutes to stand."]],
+    [/hamstring curl/i, ["Hips up and stay up the whole set.", "Pull the ball in with your heels.", "Roll out slowly without letting the hips sag."]],
+    [/farmer/i, ["Stand tall, shoulders down, ribs over hips.", "Crush the handles.", "Short, quick steps; no swinging."]],
+    [/suitcase/i, ["Stay perfectly upright against the weight.", "Brace the side opposite the weight.", "Walk slow and controlled."]],
+    [/turkish get-up/i, ["Eyes on the weight the whole time.", "Arm locked, shoulder packed.", "Slow and smooth; pause in each position."]],
+    [/pallof/i, ["Square to the cable, feet shoulder-width.", "Press straight out and hold 2 seconds without rotating.", "Ribs down, glutes on."]],
+    [/incline press/i, ["Shoulder blades back and down on the bench.", "Lower to your upper chest, elbows about 45° from your body.", "Press up and slightly in; same tempo every rep."]],
+    [/^dips/i, ["Shoulders down, away from your ears.", "Lean forward slightly; lower until shoulders are just below elbows.", "Lock out at the top."]],
+    [/^push-up/i, ["Hands under shoulders, body in one line.", "Elbows about 45° from your body.", "Chest to the floor, full lockout."]],
+    [/cable curl|hammer curl/i, ["Elbows pinned to your sides.", "No hip swing; only your forearms move.", "Squeeze at the top and control the lower."]],
+    [/zottman/i, ["Curl up palms up.", "Turn your palms down at the top.", "Lower slowly, about 3 seconds."]],
+    [/pushdown/i, ["Elbows pinned, slight forward lean.", "Spread the rope and lock out at the bottom.", "Control it back up to about 90°."]],
+    [/skull crusher/i, ["Upper arms angled slightly back.", "Lower the bar behind your forehead, elbows in.", "Extend fully without flaring."]],
+    [/overhead cable triceps/i, ["Elbows forward, close to your head.", "Full stretch behind your head.", "Lock out without moving your upper arms."]],
+    [/front, lateral, rear/i, ["Same dumbbells for all three, back to back.", "Front to eye level, side to shoulder height, rear with a hinge.", "Strict reps. Drop the weight before you swing."]],
+    [/lateral raise/i, ["Slight bend in the elbows; lead with the elbows.", "Raise to shoulder height.", "No swing; slow on the way down."]],
+    [/face pull/i, ["Rope at face height; pull toward your eyes.", "Elbows high, rotate your hands back at the end.", "Pause and squeeze the rear delts."]],
+    [/rear-delt/i, ["Slight bend in the elbows.", "Sweep your arms out wide, not back.", "Squeeze the rear delts without shrugging."]],
+    [/hanging (leg|knee) raise/i, ["Start from a still hang; no swing.", "Curl your pelvis up instead of just lifting your legs.", "Lower slowly."]],
+    [/dead bug/i, ["Low back pressed into the floor.", "Reach the opposite arm and leg long and slow.", "Exhale fully on each reach."]]
+  ];
+  function cuesFor(name) { for (var i = 0; i < CUES.length; i++) if (CUES[i][0].test(name)) return CUES[i][1]; return null; }
+
+  // ---------- Lift history ----------
+  // Planned reps for set i: the program's reps for main lifts, else the number after "N ×" in rx.
+  function plannedReps(it, i) {
+    if (it.main) { var ex = expandSets(it); return ex[i] ? ex[i].r : null; }
+    return /^\d+\s*×/.test(it.rx || "") ? repNum((it.rx || "").replace(/^\d+\s*×\s*/, "")) : null;
+  }
+  function sameAll(a) { return a.length && a.every(function (x) { return x === a[0]; }); }
+  // One line per logged exercise, like "4 × 4 @ 215, 230, 245, 255 lb".
+  function histText(it, lg) {
+    var v = (lg.items || {})[it.k];
+    if (!v) return null;
+    var miss = v.miss && v.miss.some(Boolean) ? " · missed reps" : "";
+    if (v.sets && v.sets.some(function (x) { return x != null; })) {
+      var ws = [], rs = [];
+      v.sets.forEach(function (w, i) { if (w == null) return; ws.push(w); rs.push(v.reps && v.reps[i] != null ? v.reps[i] : plannedReps(it, i)); });
+      var reps = sameAll(rs) ? (rs[0] != null ? rs[0] : "?") : rs.map(function (x) { return x == null ? "?" : x; }).join(", ");
+      return ws.length + " × " + reps + " @ " + (sameAll(ws) ? ws[0] : ws.join(", ")) + " lb" + miss;
+    }
+    if (v.w == null) return null;
+    if (it.log === "top") return "Top set " + v.w + (v.r != null ? " × " + v.r : "") + " lb" + miss;
+    var m = (it.rx || "").match(/^(\d+)\s*×\s*(.+)$/);
+    return (m ? m[1] + " × " + m[2] + " @ " : "") + v.w + " lb" + miss;
+  }
+  // Every logged session of an exercise (variants like "Slow strict chin-up" and "Weighted chin-up" count together), newest first.
+  function liftHistory(name, excludeId) {
+    var key = normName(name), out = [];
+    loggedIds().forEach(function (id) {
+      if (id === excludeId) return;
+      var s = sessDef(id), lg = logs[id];
+      if (!s || !s.blocks) return;
+      s.blocks.forEach(function (b) { b.items.forEach(function (it) {
+        if (normName(it.n) !== key) return;
+        var t = histText(it, lg);
+        if (t) out.push({ id: id, date: sessDate(id), n: it.n, txt: t, it: it });
+      }); });
+    });
+    return out;
+  }
+  function histList(entries, label) {
+    var ul = el("ul", "hist");
+    entries.forEach(function (e) {
+      var li = el("li");
+      li.appendChild(el("span", "hd", longDay(parseISO(e.date))));
+      li.appendChild(el("span", "hv", (e.n !== label ? e.n + " · " : "") + e.txt));
+      ul.appendChild(li);
+    });
+    return ul;
+  }
   // Number fields open the in-app keypad instead of the phone keyboard.
   function numInput(cls, cfg) {
     var i = el("input", cls + " kc"); i.type = "text"; i.readOnly = true; i.inputMode = "none";
     i.addEventListener("click", function () { KP.open(i, cfg()); });
     return i;
+  }
+  // Small map pin for travel days.
+  function pinIcon() {
+    var ns = "http://www.w3.org/2000/svg", sv = document.createElementNS(ns, "svg");
+    sv.setAttribute("viewBox", "0 0 24 24"); sv.setAttribute("class", "pin"); sv.setAttribute("aria-hidden", "true");
+    var pa = document.createElementNS(ns, "path");
+    pa.setAttribute("d", "M12 2a7 7 0 0 0-7 7c0 5.2 7 13 7 13s7-7.8 7-13a7 7 0 0 0-7-7zm0 9.5A2.5 2.5 0 1 1 12 6.5a2.5 2.5 0 0 1 0 5z");
+    pa.setAttribute("fill", "currentColor"); sv.appendChild(pa);
+    return sv;
   }
   function el(tag, cls, text) { var e = document.createElement(tag); if (cls) e.className = cls; if (text != null) e.textContent = text; return e; }
   function sessionFor(w, lift) { var s = SESS[lift][w - 1]; if (s && s.travel) return TRAVEL; return s; }
@@ -843,10 +985,12 @@ input.w { width: 88px; } input.r { width: 64px; } input.s { width: 200px; max-wi
     var m = lg.done && lg.doneAt ? etDate(lg.doneAt) : lg.moved;
     if (m) { var d = Math.round((parseISO(m) - parseISO(WEEKS[w - 1].start)) / 86400000); if (d >= 0 && d <= 5) return d; }
     if (lg.moved) { var d2 = Math.round((parseISO(lg.moved) - parseISO(WEEKS[w - 1].start)) / 86400000); if (d2 >= 0 && d2 <= 5) return d2; }
-    // Then a day set on the session itself in the plan (day: 0 = Mon ... 5 = Sat).
+    return planDay(w, l);
+  }
+  // The day the plan puts a lift on: the session's own day (0 = Mon ... 5 = Sat), else the lift's usual day.
+  function planDay(w, l) {
     var ps = SESS[l] && SESS[l][w - 1];
-    if (ps && ps.day != null) return ps.day;
-    return LIFT_META[l].day;
+    return ps && ps.day != null ? ps.day : LIFT_META[l].day;
   }
   function etDate(ts) { try { return new Intl.DateTimeFormat("en-CA", { timeZone: "America/New_York", year: "numeric", month: "2-digit", day: "2-digit" }).format(new Date(ts)); } catch (e) { return String(ts).slice(0, 10); } }
   function liftDate(w, l) { return addDays(parseISO(WEEKS[w - 1].start), liftDayIdx(w, l)); }
@@ -918,7 +1062,9 @@ input.w { width: 88px; } input.r { width: 64px; } input.s { width: 200px; max-wi
   });
   function render() {
     nowPick = pickNow();
-    document.getElementById("vt").textContent = TITLES[view];
+    var vt = document.getElementById("vt");
+    vt.textContent = TITLES[view];
+    if (view === "today") vt.appendChild(el("span", "td", longDay(parseISO(today))));
     Array.prototype.forEach.call(document.querySelectorAll(".tb"), function (b) {
       if (b.getAttribute("data-v") === view) b.setAttribute("aria-current", "page"); else b.removeAttribute("aria-current");
     });
@@ -946,7 +1092,6 @@ input.w { width: 88px; } input.r { width: 64px; } input.s { width: 200px; max-wi
 
   function renderToday() {
     var strip = el("section", "strip");
-    strip.appendChild(el("div", "eyebrow", "Today · " + longDay(parseISO(today))));
     var chips = el("div", "chips");
     var te = todayEntries();
     // Today's classes get their own cards (unless another day's session is open), so they're not chips too.
@@ -970,7 +1115,7 @@ input.w { width: 88px; } input.r { width: 64px; } input.s { width: 200px; max-wi
           if (classCards) return;
           c = el("span", "chip"); c.appendChild(el("span", "k", "Class")); c.appendChild(document.createTextNode(e.name + " · " + e.tm));
         } else if (e.kind === "travel") {
-          c = el("span", "chip travel"); c.appendChild(el("span", "k", "Away")); c.appendChild(document.createTextNode(e.name));
+          c = el("span", "chip travel"); c.appendChild(pinIcon()); c.appendChild(document.createTextNode(e.name));
         } else if (e.kind === "note") {
           c = el("span", "chip"); c.appendChild(el("span", "k", "Note")); c.appendChild(document.createTextNode(e.name));
         } else {
@@ -987,7 +1132,7 @@ input.w { width: 88px; } input.r { width: 64px; } input.s { width: 200px; max-wi
       back.addEventListener("click", function () { sel = null; render(); });
       strip.appendChild(back);
     }
-    viewEl.appendChild(strip);
+    if (strip.childNodes.length) viewEl.appendChild(strip);
     if (sel) { viewEl.appendChild(renderSession(sel)); return; }
     viewEl.appendChild(hypeCard(te, noLift, classes));
     // A day with a class and no lift is a training day, led by the class.
@@ -1204,7 +1349,7 @@ input.w { width: 88px; } input.r { width: 64px; } input.s { width: 200px; max-wi
   }
 
   function moveBox(pick) {
-    var w = WEEKS[pick.week - 1], id = docId(pick.week, pick.lift), cur = liftDayIdx(pick.week, pick.lift), def = LIFT_META[pick.lift].day;
+    var w = WEEKS[pick.week - 1], id = docId(pick.week, pick.lift), cur = liftDayIdx(pick.week, pick.lift), def = planDay(pick.week, pick.lift);
     var box = el("div", "move");
     var t = el("button", "linkbtn", cur === def ? "Move to another day" : "Moved to " + DOW[cur] + " · change");
     t.type = "button"; t.setAttribute("aria-expanded", "false");
@@ -1255,6 +1400,8 @@ input.w { width: 88px; } input.r { width: 64px; } input.s { width: 200px; max-wi
     arr[i] = !arr[i];
     editLog(id, function (d) { d.checks = d.checks || {}; d.checks[key] = arr; });
     btn.setAttribute("aria-pressed", String(arr[i]));
+    var itemEl = btn.closest && btn.closest(".item");
+    if (itemEl) itemEl.classList.toggle("ck", arr.some(Boolean));
     if (arr[i] && onCheck) onCheck();
     if (arr[i]) {
       var rs = parseRest(b.rest);
@@ -1265,15 +1412,24 @@ input.w { width: 88px; } input.r { width: 64px; } input.s { width: 200px; max-wi
   function renderItem(it, idx, b, id) {
     var box = el("div", "item");
     var nm = el("div", "iname");
-    nm.appendChild(el("span", "nm", it.n));
+    var cues = cuesFor(it.n);
+    if (cues) {
+      var nb = el("button", "nm nmbtn", it.n); nb.type = "button"; nb.setAttribute("aria-expanded", "false");
+      var cbox = el("ol", "cues"); cbox.hidden = true;
+      cues.forEach(function (c) { cbox.appendChild(el("li", null, c)); });
+      nb.addEventListener("click", function () { cbox.hidden = !cbox.hidden; nb.setAttribute("aria-expanded", String(!cbox.hidden)); });
+      nm.appendChild(nb);
+    } else nm.appendChild(el("span", "nm", it.n));
     if (it.rx) nm.appendChild(el("span", "rx", it.rx));
     box.appendChild(nm);
+    if (cues) box.appendChild(cbox);
     if (it.note) box.appendChild(el("p", "inote", it.note));
     if (perSet(it)) {
       box.appendChild(setRows(it, idx, b, id));
     } else {
       var n = roundsOf(it, b);
       var a2 = checksOf(id, it.k, n);
+      if (a2.some(Boolean)) box.classList.add("ck");
       if (n > 1) {
         var dots = el("div", "dots");
         for (var j = 0; j < n; j++) (function (j) {
@@ -1334,13 +1490,26 @@ input.w { width: 88px; } input.r { width: 64px; } input.s { width: 200px; max-wi
         var lr = (last.reps || []).filter(function (x) { return x != null; });
         var same = lr.length && lr.every(function (x) { return x === lr[0]; });
         var cnt = last.sets.filter(function (x) { return x != null; }).length;
-        lt = cnt + " × " + (same ? lr[0] : (lr.length ? fmtList(lr) : "?")) + " @ " + fmtList(last.sets) + " lb";
+        var lw = last.sets.filter(function (x) { return x != null; });
+        lt = cnt + " × " + (same ? lr[0] : (lr.length ? fmtList(lr) : "?")) + " @ " + (sameAll(lw) ? lw[0] : fmtList(lw)) + " lb";
       } else if (last.w != null) lt = "Top set " + last.w + (last.r != null ? " × " + last.r : "") + " lb";
     }
-    r2.appendChild(el("span", "lv", lt)); card.appendChild(r2);
+    r2.appendChild(el("span", "lv", lt));
+    var past = liftHistory(it.n, id);
+    if (past.length) {
+      // Tap "Last" to see every logged session of this lift.
+      var hb = el("button", "lr lrbtn"); hb.type = "button"; hb.setAttribute("aria-expanded", "false");
+      while (r2.firstChild) hb.appendChild(r2.firstChild);
+      hb.firstChild.appendChild(el("span", "chev", "▾"));
+      var hl = histList(past, it.n); hl.hidden = true;
+      hb.addEventListener("click", function () { hl.hidden = !hl.hidden; hb.setAttribute("aria-expanded", String(!hl.hidden)); });
+      card.appendChild(hb); card.appendChild(hl);
+    } else card.appendChild(r2);
     wrap.appendChild(card);
 
     function sugW(i) {
+      var tg = targetFor(id, it.k, i);
+      if (tg != null) return tg;
       if (sets) return load(it.main, sets[i].p);
       if (last) return last.sets && last.sets[i] != null ? last.sets[i] : last.w;
       return null;
@@ -1355,7 +1524,7 @@ input.w { width: 88px; } input.r { width: 64px; } input.s { width: 200px; max-wi
     hd.appendChild(all);
     wrap.appendChild(hd);
 
-    var W = [], R = [], C = [];
+    var W = [], R = [], C = [], ROWS = [];
     var sum = el("div", "ssum");
     // A set counts as missed when the reps entered are fewer than planned.
     function autoMiss() {
@@ -1378,6 +1547,8 @@ input.w { width: 88px; } input.r { width: 64px; } input.s { width: 200px; max-wi
     }
     function drawSum() {
       var ck = checksOf(id, it.k, n), done = 0, vol = 0;
+      // Numbers stay gray until their row is checked off.
+      ROWS.forEach(function (rw, j) { rw.classList.toggle("ck", !!ck[j]); });
       for (var i = 0; i < n; i++) if (ck[i]) { done++; var w = numOrNull(W[i].value), r = numOrNull(R[i].value); if (w != null && r != null) vol += w * r; }
       sum.textContent = done + " of " + n + " sets" + (vol ? " · " + vol.toLocaleString("en-US") + " lb volume" : "") + (miss.some(Boolean) ? " · missed reps on set " + miss.map(function (m, i) { return m ? i + 1 : null; }).filter(Boolean).join(", ") : "");
     }
@@ -1410,11 +1581,9 @@ input.w { width: 88px; } input.r { width: 64px; } input.s { width: 200px; max-wi
     }
     var ckNow = checksOf(id, it.k, n);
     for (var i = 0; i < n; i++) (function (i) {
+      if (sets && sets[i].bo && !(i && sets[i - 1].bo)) wrap.appendChild(el("div", "bohd", "Back-off"));
       var row = el("div", "srow");
-      var sn = el("span", "sn", String(i + 1));
-      if (sets) sn.appendChild(el("small", null, sets[i].p + "%"));
-      if (sets && sets[i].bo) sn.appendChild(el("span", "bo", "back-off"));
-      row.appendChild(sn);
+      row.appendChild(el("span", "sn", String(i + 1)));
       var r = numInput("r", cfgFor(i, "r"));
       r.id = "in-" + id + "-" + it.k + "-rep" + i;
       r.setAttribute("data-k", it.k); r.setAttribute("data-f", "reps"); r.setAttribute("data-i", String(i));
@@ -1427,7 +1596,11 @@ input.w { width: 88px; } input.r { width: 64px; } input.s { width: 200px; max-wi
       w.placeholder = sugW(i) != null ? String(sugW(i)) : "lb";
       w.setAttribute("aria-label", it.n + " set " + (i + 1) + " weight in pounds");
       if (cur.sets && cur.sets[i] != null) w.value = cur.sets[i];
-      row.appendChild(r); row.appendChild(w);
+      // The plan's percentage sits inside the weight box, left of the number.
+      var wb = el("div", "wbox");
+      if (sets && targetFor(id, it.k, i) == null) { wb.classList.add("has-pct"); wb.appendChild(el("span", "pct", sets[i].p + "%")); }
+      wb.appendChild(w);
+      row.appendChild(r); row.appendChild(wb);
       var c = el("button", "sck" + (miss[i] ? " miss" : ""), miss[i] ? "✕" : "✓"); c.type = "button";
       c.setAttribute("data-ck", it.k + ":" + i);
       c.setAttribute("aria-pressed", String(!!ckNow[i]));
@@ -1438,7 +1611,7 @@ input.w { width: 88px; } input.r { width: 64px; } input.s { width: 200px; max-wi
         if (on && fill(i)) save(); else drawSum();
       });
       row.appendChild(c);
-      W.push(w); R.push(r); C.push(c);
+      W.push(w); R.push(r); C.push(c); ROWS.push(row);
       wrap.appendChild(row);
     })(i);
     all.addEventListener("click", function () {
@@ -1497,12 +1670,12 @@ input.w { width: 88px; } input.r { width: 64px; } input.s { width: 200px; max-wi
       }; });
       v.id = "in-" + id + "-" + it.k + "-w";
       v.setAttribute("data-k", it.k); v.setAttribute("data-f", "w");
-      var prev = lastLogged(it.n, id);
-      v.placeholder = prev && prev.w != null ? String(prev.w) : "lb";
+      var prev = lastLogged(it.n, id), tgt = targetFor(id, it.k);
+      v.placeholder = tgt != null ? String(tgt) : (prev && prev.w != null ? String(prev.w) : "lb");
       v.setAttribute("aria-label", it.n + " weight in pounds");
       if (cur.w != null) v.value = cur.w;
       v.addEventListener("input", function () { editLog(id, function (d) { d.items = d.items || {}; d.items[it.k] = { w: numOrNull(v.value) }; }); });
-      l2.appendChild(v); l2.appendChild(document.createTextNode(prev && prev.w != null ? "lb · last time" : "lb"));
+      l2.appendChild(v); l2.appendChild(document.createTextNode(tgt != null ? "lb · target" + (prev && prev.w != null && prev.w !== tgt ? " (last " + prev.w + ")" : "") : (prev && prev.w != null ? "lb · last time" : "lb")));
       row.appendChild(l2);
     } else if (it.log === "score") {
       var l3 = el("label", null, "Score ");
@@ -1830,7 +2003,6 @@ input.w { width: 88px; } input.r { width: 64px; } input.s { width: 200px; max-wi
           var b = el("button", "entbtn", isTravel ? "Travel session" : meta.title); b.type = "button";
           b.addEventListener("click", function () { sel = { week: w.n, lift: e.lift }; go("today", true); });
           line.appendChild(b);
-          if (e.moved) line.appendChild(el("span", "tm", "moved"));
           var lg = logs[docId(w.n, e.lift)];
           if (lg && lg.done) line.appendChild(el("span", "chip-done", "Done"));
           else if (past) line.appendChild(el("span", "chip-miss", "Not logged"));
@@ -1840,8 +2012,8 @@ input.w { width: 88px; } input.r { width: 64px; } input.s { width: 200px; max-wi
           line.appendChild(el("span", "tm", e.tm));
           if (e.note) line.appendChild(el("span", "note", e.note));
         } else if (e.kind === "travel") {
-          line.appendChild(el("span", "kind travel", "Away"));
-          line.appendChild(el("span", null, e.name));
+          var loc = el("span", "loc"); loc.appendChild(pinIcon()); loc.appendChild(document.createTextNode(e.name));
+          line.appendChild(loc);
           if (e.note) line.appendChild(el("span", "note", e.note));
         } else if (e.kind === "note") {
           line.appendChild(el("span", "kind off", "Note"));
@@ -2037,6 +2209,55 @@ input.w { width: 88px; } input.r { width: 64px; } input.s { width: 200px; max-wi
     });
     c4.appendChild(ml);
     viewEl.appendChild(c4);
+
+    // Lift history: barbell and key lifts first, tap one to see every session.
+    var groups = {}, order = [];
+    ids.forEach(function (id) {
+      var s = sessDef(id); if (!s || !s.blocks) return;
+      s.blocks.forEach(function (b) { b.items.forEach(function (it) {
+        if (it.log !== "top" && it.log !== "load") return;
+        var key = normName(it.n);
+        if (!groups[key]) { groups[key] = { name: it.n, key: key, main: it.main || null, bar: perSet(it) }; order.push(key); }
+      }); });
+    });
+    var mainOrder = ["squat", "bench", "clean", "press", "trap"];
+    var keyL = [], moreL = [];
+    order.forEach(function (k) {
+      var g = groups[k]; g.list = liftHistory(g.name);
+      if (!g.list.length) return;
+      g.name = g.main ? TM_NAMES[g.main] : g.list[0].n;
+      (g.main || g.bar ? keyL : moreL).push(g);
+    });
+    keyL.sort(function (a, b) {
+      var ia = a.main ? mainOrder.indexOf(a.main) : 99, ib = b.main ? mainOrder.indexOf(b.main) : 99;
+      return ia - ib || a.name.localeCompare(b.name);
+    });
+    moreL.sort(function (a, b) { return a.name.localeCompare(b.name); });
+    if (keyL.length || moreL.length) {
+      var c4b = el("section", "hcard");
+      c4b.appendChild(el("h3", null, "Lift history"));
+      c4b.appendChild(el("p", "hsub", "Tap a lift to see every session."));
+      var lhRow = function (g) {
+        var d = el("details", "lh");
+        var sm = el("summary");
+        sm.appendChild(el("span", "n", g.name));
+        sm.appendChild(el("span", "c", g.list.length + (g.list.length === 1 ? " session" : " sessions") + " · " + short(parseISO(g.list[0].date))));
+        d.appendChild(sm);
+        d.appendChild(histList(g.list, g.name));
+        return d;
+      };
+      keyL.forEach(function (g) { c4b.appendChild(lhRow(g)); });
+      if (moreL.length) {
+        var more = el("details", "lh more");
+        var ms = el("summary"); ms.appendChild(el("span", "n", "More lifts")); ms.appendChild(el("span", "c", moreL.length + " lifts"));
+        more.appendChild(ms);
+        var mi = el("div", "lhin");
+        moreL.forEach(function (g) { mi.appendChild(lhRow(g)); });
+        more.appendChild(mi);
+        c4b.appendChild(more);
+      }
+      viewEl.appendChild(c4b);
+    }
 
     // Notes and flags
     var flags = [];
