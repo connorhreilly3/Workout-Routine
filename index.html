@@ -203,7 +203,7 @@ details.warm p { padding: 0 16px 14px; font-size: 15px; }
 .iname { display: flex; flex-wrap: wrap; align-items: baseline; gap: 2px 10px; }
 .iname .nm { font-weight: 700; font-size: 17px; }
 .iname .rx { font-family: var(--mono); font-size: 14px; }
-.nmbtn { background: none; border: none; padding: 0; color: inherit; text-align: left; cursor: pointer; text-decoration: underline dotted; text-decoration-color: var(--muted); text-underline-offset: 4px; }
+.nmbtn { background: none; border: none; padding: 0; color: inherit; font: inherit; text-align: left; cursor: pointer; }
 .cues { margin: 0; padding: 10px 14px 10px 32px; border-radius: 12px; background: var(--sunk); border: 1px solid var(--line); display: flex; flex-direction: column; gap: 6px; font-size: 14px; line-height: 1.4; }
 .cues[hidden] { display: none; }
 .cues li::marker { color: var(--accent); font-weight: 700; }
@@ -510,7 +510,7 @@ input.w { width: 88px; } input.r { width: 64px; } input.s { width: 200px; max-wi
   var ONE_RM = Object.assign({}, ONE_RM_PLAN, recall("wr-1rm") || {});
   var TM = Object.assign({}, TM_PLAN, recall("wr-tm") || {});
   // Shown at the bottom of the Maxes tab; bump it with every update so it's easy to tell which version a phone has.
-  var APP_VERSION = "17 · Nov 17";
+  var APP_VERSION = "18 · Nov 18";
   var TM_NAMES = { squat: "Back squat", bench: "Bench press", trap: "Trap bar deadlift", press: "Strict press", clean: "Power clean" };
   var BARBELL = { squat: true, bench: true, press: true, clean: true };
 
