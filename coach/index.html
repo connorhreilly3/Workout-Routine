@@ -270,7 +270,7 @@ body.kp-open .rest { bottom: var(--kph, 360px); z-index: 36; }
 <script>
 (function () {
   "use strict";
-  var VERSION = "12";
+  var VERSION = "13";
 
   // Sample program for ?demo, so anyone can try the app without a coach's sheet.
   var DEMO_DATA = {
@@ -593,7 +593,8 @@ body.kp-open .rest { bottom: var(--kph, 360px); z-index: 36; }
   function brand() {
     var s = (data && data.settings) || {};
     var gym = s.gym || "Workouts";
-    document.getElementById("gym").textContent = gym;
+    // The client's first name next to the gym, so it reads as their own program.
+    document.getElementById("gym").textContent = gym + (firstName() ? " · " + firstName() : "");
     document.title = gym;
     document.getElementById("apptitle").setAttribute("content", gym);
     if (/^#[0-9a-f]{6}$/i.test(s.color || "")) document.documentElement.style.setProperty("--brand", s.color);
@@ -689,7 +690,7 @@ body.kp-open .rest { bottom: var(--kph, 360px); z-index: 36; }
       if (b.dataset.v === view) b.setAttribute("aria-current", "page"); else b.removeAttribute("aria-current");
     });
     var vt = document.getElementById("vt");
-    vt.textContent = sel ? "Workout" : TITLES[view];
+    vt.textContent = sel ? "Workout" : view === "program" && firstName() ? firstName() + "'s program" : TITLES[view];
     if (view === "today" && !sel) vt.appendChild(el("span", "td", fmtDay(isoDay())));
     viewEl.innerHTML = "";
     if (!data) return renderEmpty();
