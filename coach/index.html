@@ -270,7 +270,7 @@ body.kp-open .rest { bottom: var(--kph, 360px); z-index: 36; }
 <script>
 (function () {
   "use strict";
-  var VERSION = "8";
+  var VERSION = "9";
 
   // Sample program for ?demo, so anyone can try the app without a coach's sheet.
   var DEMO_DATA = {
@@ -1235,8 +1235,10 @@ body.kp-open .rest { bottom: var(--kph, 360px); z-index: 36; }
     }
     function changed(startTimer, i) {
       save(LKEY, logs); queueSync(s.id);
-      // No rest timer on the workout's last exercise: nothing comes after it.
-      if (startTimer && it.rest && it !== s.items[s.items.length - 1]) startRest(it.rest, it.n);
+      // The last exercise rests between its sets, but not after its final set: the workout is over.
+      var lastEx = it === s.items[s.items.length - 1];
+      var finalSet = lastEx && (i === it.sets - 1 || v.ck.slice(0, it.sets).filter(Boolean).length >= it.sets);
+      if (startTimer && it.rest && !finalSet) startRest(it.rest, it.n);
     }
     for (var i = 0; i < it.sets; i++) (function (i) {
       var p = it.per[i];
