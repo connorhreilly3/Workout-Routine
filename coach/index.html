@@ -122,7 +122,30 @@ main { padding: 16px; display: flex; flex-direction: column; gap: 14px; }
 .ck-all { width: 36px; height: 36px; border-width: 1.5px; }
 .ck-all svg { opacity: .55; }
 textarea { width: 100%; min-height: 90px; border-radius: 12px; border: 1px solid var(--line); background: var(--sunk); color: var(--ink); font: inherit; padding: 10px 12px; resize: vertical; }
-.donebar { font-size: 14px; color: var(--ok); font-weight: 600; text-align: center; }
+.small { font-size: 14px; }
+.linkbtn.center { align-self: center; text-align: center; }
+.card.summary { gap: 10px; }
+.donebadge { display: inline-flex; align-items: center; gap: 8px; align-self: flex-start; padding: 5px 12px 5px 8px; border-radius: 99px; background: var(--ok-soft); color: var(--ok); font-size: 13px; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; animation: pop .35s ease-out; }
+.donebadge svg { width: 18px; height: 18px; }
+@keyframes pop { 0% { transform: scale(.85); opacity: 0; } 70% { transform: scale(1.04); opacity: 1; } 100% { transform: scale(1); } }
+@media (prefers-reduced-motion: reduce) { .donebadge { animation: none; } }
+.sumstats { display: grid; grid-template-columns: repeat(3, 1fr); border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); margin: 4px -18px 0; }
+.sumstats .sst { display: flex; flex-direction: column; gap: 2px; padding: 12px 10px 12px 18px; min-width: 0; }
+.sumstats .sst + .sst { border-left: 1px solid var(--line); }
+.sumstats .ssl { font-size: 11px; font-weight: 600; letter-spacing: .1em; text-transform: uppercase; color: var(--muted); }
+.sumstats .ssv { font-family: var(--display); font-weight: 800; font-size: 24px; line-height: 1.05; white-space: nowrap; }
+.sumbest { padding: 10px 14px; border-radius: 12px; background: var(--accent-soft); display: flex; flex-direction: column; gap: 4px; }
+.sumbest .eyebrow { color: var(--accent); }
+.sbrow { display: flex; justify-content: space-between; gap: 12px; font-size: 14px; font-weight: 600; }
+.sbrow .m { font-family: var(--mono); font-size: 12.5px; color: var(--accent); white-space: nowrap; }
+.sumlist { list-style: none; margin: 0; padding: 0; }
+.sumlist li { display: flex; justify-content: space-between; gap: 12px; padding: 9px 0; border-top: 1px solid var(--line); font-size: 14px; }
+.sumlist li:first-child { border-top: none; }
+.sumlist .n { font-weight: 600; }
+.sumlist .v { font-family: var(--mono); font-size: 12.5px; color: var(--muted); text-align: right; }
+.sumnotes { padding: 10px 12px; border-radius: 10px; background: var(--sunk); font-size: 14px; white-space: pre-wrap; }
+.resetbtn { align-self: center; background: none; border: none; padding: 8px 12px; color: var(--warn); font-weight: 600; font-size: 14px; border-radius: 10px; }
+.resetbtn.armed { background: var(--warn); color: #FFFFFF; }
 
 details.lh { border-top: 1px solid var(--line); }
 details.lh:first-of-type { border-top: none; }
@@ -170,7 +193,7 @@ details.lh .hist { padding-bottom: 12px; }
 <script>
 (function () {
   "use strict";
-  var VERSION = "1";
+  var VERSION = "2";
 
   // Sample program for ?demo, so anyone can try the app without a coach's sheet.
   var DEMO_DATA = {
@@ -305,12 +328,13 @@ details.lh .hist { padding-bottom: 12px; }
     R = {};
     ((data && data.history) || []).forEach(function (r) {
       var id = String(r[0] || ""); if (!id) return;
-      var s = R[id] || (R[id] = { date: String(r[1] || ""), status: String(r[5] || ""), notes: "", ex: {}, order: [] });
+      var s = R[id] || (R[id] = { date: String(r[1] || ""), status: String(r[5] || ""), notes: "", minutes: null, ex: {}, order: [] });
       if (r[5] === "Done") s.status = "Done";
       if (r[12]) s.notes = String(r[12]);
+      if (r[14] !== "" && r[14] != null && isFinite(Number(r[14]))) s.minutes = Number(r[14]);
       var n = String(r[6] || ""); if (!n) return;
       if (!s.ex[n]) { s.ex[n] = []; s.order.push(n); }
-      s.ex[n].push({ w: r[9] === "" || r[9] == null ? null : Number(r[9]), r: r[10] === "" || r[10] == null ? null : Number(r[10]), done: r[11] === true || r[11] === "TRUE" });
+      s.ex[n].push({ set: parseInt(r[7], 10) || s.ex[n].length + 1, w: r[9] === "" || r[9] == null ? null : Number(r[9]), r: r[10] === "" || r[10] == null ? null : Number(r[10]), done: r[11] === true || r[11] === "TRUE" });
     });
     return R;
   }
@@ -367,7 +391,7 @@ details.lh .hist { padding-bottom: 12px; }
   function same(a) { return a.length && a.every(function (x) { return x === a[0]; }); }
   function setText(sets) {
     var ws = sets.map(function (x) { return x.w; }), rs = sets.map(function (x) { return x.r == null ? "?" : x.r; });
-    var hasW = ws.some(function (x) { return x != null; });
+    var hasW = ws.some(function (x) { return !!x; });
     return sets.length + " × " + (same(rs) ? rs[0] : rs.join(", ")) +
       (hasW ? " @ " + (same(ws) ? ws[0] : ws.map(function (x) { return x == null ? "–" : x; }).join(", ")) + " lb" : "");
   }
@@ -398,6 +422,8 @@ details.lh .hist { padding-bottom: 12px; }
     });
     if (!rows.length) rows.push(head.concat(["", "", "", "", "", false, ""]));
     rows[0][12] = lg.notes || "";
+    rows[0][13] = "";
+    rows[0][14] = lg.minutes != null ? lg.minutes : "";
     return rows;
   }
   var syncTimer = null, seq = 0;
@@ -628,11 +654,152 @@ details.lh .hist { padding-bottom: 12px; }
 
   function open(id) { sel = id; render(); window.scrollTo(0, 0); }
 
+  // ---------- Finishing a workout ----------
+  var editing = {};
+  // A workout logged on another phone: copy the sheet's sets onto this one before showing or editing it,
+  // so saving here never replaces the sheet's rows with an empty workout.
+  function hydrate(s) {
+    var rem = remote()[s.id];
+    if (hasLocal(s.id) || !rem) return;
+    var lg = logOf(s.id);
+    s.items.forEach(function (it) {
+      var rows = null;
+      Object.keys(rem.ex).forEach(function (n) { if (!rows && norm(n) === norm(it.n)) rows = rem.ex[n]; });
+      if (!rows) return;
+      var v = itemLog(s.id, it.key);
+      rows.forEach(function (x) { var i = x.set - 1; if (i < 0 || i >= it.sets) return; v.w[i] = x.w; v.r[i] = x.r; v.ck[i] = x.done; });
+    });
+    lg.status = rem.status || "In progress"; lg.date = rem.date || lg.date;
+    if (rem.notes) lg.notes = rem.notes;
+    if (rem.minutes != null) lg.minutes = rem.minutes;
+    if (lg.status === "Done") lg.doneAt = (rem.date || isoDay()) + "T12:00:00";
+    save(LKEY, logs);
+  }
+  function finishSession(s) {
+    var lg = logOf(s.id), now = Date.now();
+    lg.status = "Done"; lg.doneAt = new Date(now).toISOString(); if (!lg.date) lg.date = isoDay();
+    if (lg.startedAt) lg.minutes = Math.max(1, Math.min(240, Math.round((now - lg.startedAt) / 60000)));
+    save(LKEY, logs); queueSync(s.id, true);
+    editing[s.id] = false;
+    if (navigator.vibrate) try { navigator.vibrate(40); } catch (e) {}
+    render(); window.scrollTo(0, 0);
+  }
+  function resumeSession(s) {
+    var lg = logOf(s.id);
+    lg.status = "In progress"; delete lg.doneAt;
+    lg.startedAt = Date.now() - (lg.minutes || 0) * 60000;
+    save(LKEY, logs); queueSync(s.id, true);
+    editing[s.id] = false; render(); window.scrollTo(0, 0);
+  }
+  // Clears every set and the time; notes stay. Two taps, so a stray one can't wipe the workout.
+  function resetSession(s) {
+    var lg = logOf(s.id);
+    lg.items = {}; lg.status = "In progress";
+    delete lg.doneAt; delete lg.minutes; delete lg.startedAt; delete lg.date;
+    save(LKEY, logs); queueSync(s.id, true);
+    editing[s.id] = false; render(); window.scrollTo(0, 0);
+  }
+  // Heaviest checked weight for an exercise in earlier workouts (this phone or the sheet).
+  function prevTop(name, id, date) {
+    var key = norm(name), best = null;
+    function take(w) { if (w != null && w > 0 && (best == null || w > best)) best = w; }
+    Object.keys(logs).forEach(function (oid) {
+      if (oid === id || !hasLocal(oid)) return;
+      var s2 = model().byId[oid], lg = logs[oid];
+      if (!s2 || (lg.date && date && lg.date > date)) return;
+      s2.items.forEach(function (it) {
+        if (norm(it.n) !== key) return;
+        var v = lg.items[it.key]; if (!v) return;
+        for (var i = 0; i < it.sets; i++) if (v.ck[i]) take(v.w[i]);
+      });
+    });
+    var rem = remote();
+    Object.keys(rem).forEach(function (oid) {
+      if (oid === id || hasLocal(oid) || (rem[oid].date && date && rem[oid].date > date)) return;
+      rem[oid].order.forEach(function (n) { if (norm(n) === key) rem[oid].ex[n].forEach(function (x) { if (x.done) take(x.w); }); });
+    });
+    return best;
+  }
+  function stats(s) {
+    var lg = logOf(s.id), out = { sets: 0, vol: 0, lines: [], skipped: [], best: [] };
+    s.items.forEach(function (it) {
+      var v = lg.items[it.key] || { w: [], r: [], ck: [] }, done = [], top = null;
+      for (var i = 0; i < it.sets; i++) {
+        if (!v.ck[i]) continue;
+        var r = v.r[i] != null ? v.r[i] : it.per[i].rFill, w = v.w[i];
+        done.push({ w: w, r: v.r[i] });
+        if (w != null && w > 0) {
+          if (top == null || w > top) top = w;
+          if (r && !/yd|sec|min|cal|\bm\b/i.test(it.per[i].reps || "")) out.vol += w * r;
+        }
+      }
+      if (!done.length) { out.skipped.push(it.n); return; }
+      out.sets += done.length;
+      out.lines.push({ n: it.n, txt: setText(done) });
+      if (top != null) {
+        var prev = prevTop(it.n, s.id, lg.date);
+        if (prev != null && top > prev) out.best.push({ n: it.n, txt: top + " lb, up from " + prev });
+      }
+    });
+    return out;
+  }
+  function volumeLine(v) {
+    var eq = [[13000, "an elephant", "elephants"], [4000, "a car", "cars"], [1000, "a grand piano", "grand pianos"]];
+    for (var i = 0; i < eq.length; i++) {
+      if (v < eq[i][0]) continue;
+      var n = Math.round(v / eq[i][0]);
+      return "That's about " + (n === 1 ? eq[i][1] : n + " " + eq[i][2]) + ".";
+    }
+    return "";
+  }
+  var DONE_LINES = [
+    "Logged. Go eat something with protein in it.",
+    "That's one more in the books. Hydrate.",
+    "Walking normally is optional for the next hour.",
+    "Nice work. Your coach will see every set.",
+    "Another one down. The program works because you show up."
+  ];
+  function renderSummary(s) {
+    var lg = logOf(s.id), st = stats(s);
+    var c = el("section", "card summary");
+    var badge = el("div", "donebadge"); badge.innerHTML = CHECK_SVG; badge.appendChild(document.createTextNode("Workout complete"));
+    c.appendChild(badge);
+    c.appendChild(el("div", "eyebrow", sessLabel(s) + (lg.date ? " · " + fmtDay(lg.date) : "")));
+    c.appendChild(el("h2", null, s.title));
+    c.appendChild(el("p", "muted", DONE_LINES[(s.id.length + (lg.date || "").length + s.items.length) % DONE_LINES.length]));
+    var g = el("div", "sumstats");
+    [["Time", lg.minutes != null ? lg.minutes + " min" : "—"], ["Sets", String(st.sets)], ["Volume", st.vol ? Math.round(st.vol).toLocaleString("en-US") + " lb" : "—"]].forEach(function (x) {
+      var t = el("div", "sst"); t.appendChild(el("span", "ssl", x[0])); t.appendChild(el("span", "ssv", x[1])); g.appendChild(t);
+    });
+    c.appendChild(g);
+    var vl = st.vol ? volumeLine(st.vol) : "";
+    if (vl) c.appendChild(el("p", "muted small", vl));
+    if (st.best.length) {
+      var hi = el("div", "sumbest"); hi.appendChild(el("div", "eyebrow", "Heaviest yet"));
+      st.best.forEach(function (b) { var r = el("div", "sbrow"); r.appendChild(el("span", null, b.n)); r.appendChild(el("span", "m", b.txt)); hi.appendChild(r); });
+      c.appendChild(hi);
+    }
+    var ul = el("ul", "sumlist");
+    st.lines.forEach(function (x) { var li = el("li"); li.appendChild(el("span", "n", x.n)); li.appendChild(el("span", "v", x.txt)); ul.appendChild(li); });
+    c.appendChild(ul);
+    if (st.skipped.length) c.appendChild(el("p", "muted small", "Skipped: " + st.skipped.join(", ")));
+    if (lg.notes && String(lg.notes).trim()) c.appendChild(el("p", "sumnotes", String(lg.notes).trim()));
+    viewEl.appendChild(c);
+    var eb = el("button", "btn ghost", "Edit workout"); eb.type = "button";
+    eb.addEventListener("click", function () { editing[s.id] = true; render(); window.scrollTo(0, 0); });
+    viewEl.appendChild(eb);
+    var rb = el("button", "linkbtn center", "Finished by mistake? Resume workout"); rb.type = "button";
+    rb.addEventListener("click", function () { resumeSession(s); });
+    viewEl.appendChild(rb);
+  }
+
   function renderSession(s) {
+    hydrate(s);
     var lg = logOf(s.id);
     var back = el("button", "linkbtn back", "‹ Back"); back.type = "button";
     back.addEventListener("click", function () { sel = null; render(); window.scrollTo(0, 0); });
     viewEl.appendChild(back);
+    if (isDone(s.id) && !editing[s.id]) return renderSummary(s);
     var head = el("div");
     head.appendChild(el("div", "eyebrow", sessLabel(s) + (isDone(s.id) ? " · Done" : "")));
     head.appendChild(el("h2", null, s.title));
@@ -647,15 +814,25 @@ details.lh .hist { padding-bottom: 12px; }
     nc.appendChild(ta);
     viewEl.appendChild(nc);
 
-    var fin = el("button", "btn", isDone(s.id) ? "Save changes" : "Finish workout"); fin.type = "button";
+    var fin = el("button", "btn", isDone(s.id) ? "Done editing" : "Finish workout"); fin.type = "button";
     fin.addEventListener("click", function () {
-      lg.status = "Done"; lg.doneAt = new Date().toISOString(); if (!lg.date) lg.date = isoDay();
-      save(LKEY, logs); queueSync(s.id, true);
-      sel = null; view = "today"; render(); window.scrollTo(0, 0);
-      toast("Saved. Nice work.");
+      if (isDone(s.id)) { queueSync(s.id, true); editing[s.id] = false; render(); window.scrollTo(0, 0); return; }
+      finishSession(s);
     });
     viewEl.appendChild(fin);
-    if (lg.status === "Done" && lg.doneAt) viewEl.appendChild(el("div", "donebar", "Finished " + fmtDay(lg.doneAt.slice(0, 10))));
+    if (isDone(s.id)) {
+      var rz = el("button", "resetbtn", "Reset workout"); rz.type = "button";
+      var armed = null;
+      rz.addEventListener("click", function () {
+        if (!armed) {
+          rz.textContent = "Tap again to clear every set"; rz.classList.add("armed");
+          armed = setTimeout(function () { armed = null; rz.textContent = "Reset workout"; rz.classList.remove("armed"); }, 4000);
+          return;
+        }
+        clearTimeout(armed); resetSession(s);
+      });
+      viewEl.appendChild(rz);
+    }
   }
 
   function renderItem(s, it) {
@@ -696,6 +873,7 @@ details.lh .hist { padding-bottom: 12px; }
         if (v.r[i] == null && it.per[i].rFill != null) { v.r[i] = it.per[i].rFill; R_[i].value = v.r[i]; }
         if (v.w[i] == null && it.per[i].w != null) { v.w[i] = it.per[i].w; W_[i].value = v.w[i]; }
         if (!lg().date) lg().date = isoDay();
+        if (!lg().startedAt) lg().startedAt = Date.now();
         if (lg().status !== "Done") lg().status = "In progress";
       }
       paint(i);
