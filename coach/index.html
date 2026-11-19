@@ -270,7 +270,7 @@ body.kp-open .rest { bottom: var(--kph, 360px); z-index: 36; }
 <script>
 (function () {
   "use strict";
-  var VERSION = "11";
+  var VERSION = "12";
 
   // Sample program for ?demo, so anyone can try the app without a coach's sheet.
   var DEMO_DATA = {
@@ -346,10 +346,21 @@ body.kp-open .rest { bottom: var(--kph, 360px); z-index: 36; }
   var CHECK2_SVG = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 12.5 6.5 17 15 7.5M11 15.5l1.5 1.5L22 7.5"/></svg>';
 
   // ---------- Program model ----------
+  // The four main barbell lifts the coach keeps maxes for on the Clients tab.
+  var LIFTS = ["Bench", "Squat", "Deadlift", "Clean"];
+  function liftOf(n) {
+    var t = String(n || "").toLowerCase();
+    if (/\b(db|dumbbell|kb|kettlebell)\b/.test(t)) return null;
+    if (/clean/.test(t)) return "Clean";
+    if (/deadlift/.test(t) && !/romanian|rdl|stiff|single|\bsl\b/.test(t)) return "Deadlift";
+    if (/bench/.test(t) && !/incline|decline|close/.test(t)) return "Bench";
+    if (/squat/.test(t) && !/goblet|split|bulgarian|front|overhead|jump|box|pistol|hack|belt/.test(t)) return "Squat";
+    return null;
+  }
   function maxFor(n) {
     var mx = (data && data.maxes) || {}, k = norm(n), best = null;
     Object.keys(mx).forEach(function (m) { if (norm(m) === k) best = mx[m]; });
-    if (best == null) Object.keys(mx).forEach(function (m) { if (best == null && norm(m) && k.indexOf(norm(m)) >= 0) best = mx[m]; });
+    if (best == null && liftOf(n) && mx[liftOf(n)] > 0) best = mx[liftOf(n)];
     return best;
   }
   function restSecs(s) {
@@ -1363,25 +1374,25 @@ body.kp-open .rest { bottom: var(--kph, 360px); z-index: 36; }
       c3.appendChild(bars); c3.appendChild(bx); c3.appendChild(ro);
       viewEl.appendChild(c3);
 
-      // Best set and estimated 1-rep max per weighted exercise (Epley), against the max on the coach's sheet.
+      // Estimated 1-rep max (Epley) for the four main lifts, from the best set of each.
       var best = {};
       L.forEach(function (x) { x.sets.forEach(function (t) {
-        if (!(t.w > 0) || !t.r || t.timed || t.r > 12) return;
-        var e = e1rm(t.w, t.r), k = norm(t.n), cur = best[k];
-        if (!cur || e > cur.e) best[k] = { n: t.n, e: e, w: t.w, r: t.r, date: x.date };
+        var lift = liftOf(t.n);
+        if (!lift || !(t.w > 0) || !t.r || t.timed || t.r > 10) return;
+        var e = e1rm(t.w, t.r), cur = best[lift];
+        if (!cur || e > cur.e) best[lift] = { n: t.n, e: e, w: t.w, r: t.r, date: x.date };
       }); });
-      var bl = Object.keys(best).map(function (k) { return best[k]; }).sort(function (a, b) { return b.e - a.e; }).slice(0, 8);
+      var bl = LIFTS.filter(function (k) { return best[k]; });
       if (bl.length) {
         var c4 = el("section", "card");
-        c4.appendChild(el("h3", null, "Best lifts"));
-        c4.appendChild(el("p", "hsub", "Best set so far and its estimated 1-rep max" + (Object.keys((data && data.maxes) || {}).length ? ", against your max on file." : ".")));
+        c4.appendChild(el("h3", null, "Estimated maxes"));
+        c4.appendChild(el("p", "hsub", "Your 1-rep max, estimated from your best set."));
         var ml = el("div");
-        bl.forEach(function (bb) {
-          var r = el("div", "mlrow"), mxx = maxFor(bb.n);
-          r.appendChild(el("span", "n", bb.n));
-          r.appendChild(el("span", "e", "e1RM " + bb.e));
-          if (mxx) { var mt = el("div", "meter"), f = el("div"); f.style.width = Math.min(100, 100 * bb.e / mxx) + "%"; mt.appendChild(f); r.appendChild(mt); }
-          r.appendChild(el("span", "d", "Best " + bb.w + " × " + bb.r + (bb.date ? " on " + fmtDay(bb.date).replace(/^\w+, /, "") : "") + (mxx ? " · max " + mxx + " (" + Math.round(100 * bb.e / mxx) + "%)" : "")));
+        bl.forEach(function (k) {
+          var bb = best[k], r = el("div", "mlrow");
+          r.appendChild(el("span", "n", k));
+          r.appendChild(el("span", "e", bb.e + " lb"));
+          r.appendChild(el("span", "d", "From " + bb.n.toLowerCase() + " " + bb.w + " × " + bb.r + (bb.date ? " on " + fmtDay(bb.date).replace(/^\w+, /, "") : "")));
           ml.appendChild(r);
         });
         c4.appendChild(ml);
