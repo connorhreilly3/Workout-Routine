@@ -42,6 +42,13 @@
     }
   };
   window.claude = { use: function () { return Promise.resolve(db); } };
+  // Restore from the Sheet: saves a doc on this phone without queuing it to sync back.
+  window.__wrPut = function (col, id, body) {
+    data[col] = data[col] || {};
+    data[col][id] = JSON.parse(JSON.stringify(body));
+    save();
+    (subs[col] || []).forEach(function (cb) { cb(snap(col)); });
+  };
 })();
 </script>
 <title>Pre-Trek Block</title>
@@ -510,7 +517,7 @@ input.w { width: 88px; } input.r { width: 64px; } input.s { width: 200px; max-wi
   var ONE_RM = Object.assign({}, ONE_RM_PLAN, recall("wr-1rm") || {});
   var TM = Object.assign({}, TM_PLAN, recall("wr-tm") || {});
   // Shown at the bottom of the Maxes tab; bump it with every update so it's easy to tell which version a phone has.
-  var APP_VERSION = "18 · Nov 18";
+  var APP_VERSION = "19 · Nov 18";
   var TM_NAMES = { squat: "Back squat", bench: "Bench press", trap: "Trap bar deadlift", press: "Strict press", clean: "Power clean" };
   var BARBELL = { squat: true, bench: true, press: true, clean: true };
 
@@ -2522,7 +2529,51 @@ input.w { width: 88px; } input.r { width: 64px; } input.s { width: 200px; max-wi
     var week = b.week != null ? b.week : +String(id).replace(/\D/g, "");
     return { block: BLOCK, week: week, row: [BLOCK, week, b.updatedAt ? etDate(b.updatedAt) : "", b.lb != null ? b.lb : ""] };
   }
-  window.WR = { block: BLOCK, rows: sheetRows, bodyweightRow: bodyweightRow };
+  // The reverse of sheetRows: rebuilds a session's log from its Sessions row and Sets rows, so a new
+  // phone (or a new address) gets its history, done days and "last time" numbers back.
+  function fromSheet(r, rows) {
+    var id = String(r[1] || ""), s = sessDef(id);
+    if (!s || !s.blocks) return null;
+    var p = id.match(/^w(\d+)-l(\d+)$/), lg = { items: {}, checks: {} };
+    if (p) { lg.week = +p[1]; lg.lift = +p[2]; } else lg.extra = id;
+    var all = [];
+    s.blocks.forEach(function (b) { b.items.forEach(function (it) { all.push(it); }); });
+    function find(n) {
+      n = String(n || "").trim();
+      for (var i = 0; i < all.length; i++) if (all[i].n === n) return all[i];
+      var k = normName(n);
+      for (var j = 0; j < all.length; j++) if (normName(all[j].n) === k) return all[j];
+      return null;
+    }
+    function yes(x) { return x === true || String(x).toUpperCase() === "TRUE"; }
+    function day(x) { var m = String(x || "").match(/^(\d{4}-\d{2}-\d{2})/); return m ? m[1] : ""; }
+    (rows || []).forEach(function (x) {
+      var it = find(x[5]);
+      if (!it || it.log === "score") return;
+      var i = Math.max(0, (parseInt(x[6], 10) || 1) - 1);
+      var v = lg.items[it.k] || (lg.items[it.k] = {}), ck = lg.checks[it.k] || (lg.checks[it.k] = []);
+      var w = numOrNull(x[8]), rr = numOrNull(x[9]);
+      if (perSet(it)) { v.sets = v.sets || []; v.sets[i] = w; }
+      else if (w != null && v.w == null) v.w = w;
+      if (rr != null) { v.reps = v.reps || []; v.reps[i] = rr; if (it.log === "top" && !perSet(it) && v.r == null) v.r = rr; }
+      if (yes(x[10])) { v.miss = v.miss || []; v.miss[i] = true; }
+      ck[i] = yes(x[11]);
+    });
+    // Holes in per-set lists become null, the same as a skipped box.
+    Object.keys(lg.items).forEach(function (k) { ["sets", "reps", "miss"].forEach(function (f) { var a = lg.items[k][f]; if (a) for (var i = 0; i < a.length; i++) if (a[i] === undefined) a[i] = f === "miss" ? false : null; }); });
+    Object.keys(lg.checks).forEach(function (k) { var a = lg.checks[k]; for (var i = 0; i < a.length; i++) a[i] = !!a[i]; });
+    String(r[8] || "").split(/;\s*/).forEach(function (part) {
+      var m = part.match(/^(.*?):\s*(.*)$/), it = m && find(m[1]);
+      if (it && it.log === "score") (lg.items[it.k] = lg.items[it.k] || {}).s = m[2];
+    });
+    if (String(r[6]) === "Done") { lg.done = true; lg.doneAt = (day(r[2]) || iso(new Date())) + "T17:00:00.000Z"; }
+    if (r[7] !== "" && r[7] != null && isFinite(Number(r[7]))) lg.minutes = Number(r[7]);
+    if (r[9]) lg.notes = String(r[9]);
+    var up = r[10] ? new Date(r[10]) : null;
+    lg.updatedAt = up && !isNaN(up) ? up.toISOString() : new Date().toISOString();
+    return lg;
+  }
+  window.WR = { block: BLOCK, rows: sheetRows, bodyweightRow: bodyweightRow, fromSheet: fromSheet };
 
   render();
   if (running) tickElapsed();
@@ -2576,6 +2627,35 @@ input.w { width: 88px; } input.r { width: 64px; } input.s { width: 200px; max-wi
   }
 
   function count() { return Object.keys(pending).length; }
+
+  // Restore: on a phone (or address) that's missing sessions the Sheet has, pull them back once.
+  // Sessions already on this phone are never overwritten.
+  var RESTORED = "wr-restore-v1", restoring = false;
+  function restore() {
+    var pass = get(PASS);
+    if (!SYNC_URL || !pass || get(RESTORED) || restoring || !window.WR || !window.WR.fromSheet || !window.__wrPut) return;
+    restoring = true;
+    fetch(SYNC_URL + "?read=1&block=" + encodeURIComponent(window.WR.block) + "&passcode=" + encodeURIComponent(pass))
+      .then(function (r) { return r.json(); })
+      .then(function (res) {
+        restoring = false;
+        if (!res || !res.ok || !Array.isArray(res.sessions)) return; // an older sync script can't read yet; try again next time
+        var d = get(DB) || {}, haveL = d.logs || {}, haveB = d.bodyweight || {}, n = 0;
+        res.sessions.forEach(function (row) {
+          var id = String(row[1] || "");
+          if (!id || haveL[id]) return;
+          var doc = window.WR.fromSheet(row, (res.sets || []).filter(function (x) { return String(x[1]) === id; }));
+          if (doc) { window.__wrPut("logs", id, doc); n++; }
+        });
+        (res.bodyweight || []).forEach(function (row) {
+          var wk = parseInt(row[1], 10), lb = Number(row[3]);
+          if (!wk || !isFinite(lb) || row[3] === "" || haveB["w" + wk]) return;
+          var dd = String(row[2] || "").slice(0, 10);
+          window.__wrPut("bodyweight", "w" + wk, { week: wk, lb: lb, updatedAt: /^\d{4}-\d{2}-\d{2}$/.test(dd) ? dd + "T12:00:00.000Z" : new Date().toISOString() });
+        });
+        put(RESTORED, new Date().toISOString());
+      }, function () { restoring = false; });
+  }
   function schedule(ms) { clearTimeout(timer); timer = setTimeout(flush, ms); }
   function mark(col, id) {
     if (col !== "logs" && col !== "bodyweight") return;
@@ -2658,7 +2738,7 @@ input.w { width: 88px; } input.r { width: 64px; } input.s { width: 200px; max-wi
     document.getElementById("syncdlg-save").addEventListener("click", function () {
       var v = inp.value.trim();
       if (!v) { inp.focus(); return; }
-      put(PASS, v); state = ""; closeDlg(); show(); flush();
+      put(PASS, v); state = ""; closeDlg(); show(); restore(); flush();
     });
     inp.addEventListener("keydown", function (e) { if (e.key === "Enter") document.getElementById("syncdlg-save").click(); });
   }
@@ -2669,8 +2749,9 @@ input.w { width: 88px; } input.r { width: 64px; } input.s { width: 200px; max-wi
   window.addEventListener("pageshow", function () { schedule(800); });
   setInterval(function () { if (count() && !busy && document.visibilityState === "visible") flush(); }, 60000);
 
-  window.WRSync = { mark: mark, flush: flush };
+  window.WRSync = { mark: mark, flush: flush, restore: restore };
   show();
+  restore();
   schedule(1500);
 })();
 </script>
