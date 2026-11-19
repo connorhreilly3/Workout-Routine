@@ -468,10 +468,12 @@ details.lh .hist { padding-bottom: 12px; }
     fetch(API + "?client=" + encodeURIComponent(cfg.c))
       .then(function (r) { return r.json(); })
       .then(function (res) {
+        // A sheet script that answers but sends no program is an older or unfinished setup.
+        if (res && res.ok && !Array.isArray(res.program)) res = { ok: false, error: "setup" };
         if (!res || !res.ok) {
           loadError = (res && res.error) || "error";
           if (loadError === "unknown-client") setSync("badlink");
-          if (!data || loadError === "unknown-client") render();
+          if (!data || loadError === "unknown-client" || loadError === "setup") render();
           return;
         }
         loadError = "";
@@ -542,7 +544,7 @@ details.lh .hist { padding-bottom: 12px; }
     if (view === "today" && !sel) vt.appendChild(el("span", "td", fmtDay(isoDay())));
     viewEl.innerHTML = "";
     if (!data) return renderEmpty();
-    if (!DEMO && loadError === "unknown-client") return renderEmpty();
+    if (!DEMO && (loadError === "unknown-client" || loadError === "setup")) return renderEmpty();
     if (sel && model().byId[sel]) return renderSession(model().byId[sel]);
     sel = null;
     if (view === "program") return renderProgram();
@@ -560,6 +562,9 @@ details.lh .hist { padding-bottom: 12px; }
     } else if (loadError === "unknown-client") {
       c.appendChild(el("h3", null, "This link isn't active"));
       c.appendChild(el("p", "muted", "Ask your coach to send your link again."));
+    } else if (loadError === "setup") {
+      c.appendChild(el("h3", null, "Setup isn't finished"));
+      c.appendChild(el("p", "muted", "Your coach's sheet needs its latest script deployed. Ask them to check it, then open this link again."));
     } else if (loadError === "no-program") {
       c.appendChild(el("h3", null, "No program yet"));
       c.appendChild(el("p", "muted", "Your coach hasn't added your program. Check back soon."));
