@@ -27,13 +27,13 @@
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
     --bg: #0E1115; --surface: #161A20; --sunk: #1C2128; --ink: #E7EBF0; --muted: #98A2AF; --line: #2A313A;
-    --accent: color-mix(in srgb, var(--brand, #4C74F0) 72%, #FFFFFF); --accent-ink: #0E1115;
+    --accent: color-mix(in srgb, var(--brand, #1E4FD6) 60%, #FFFFFF); --accent-ink: #0E1115;
     --ok: #5CC28E; --ok-soft: #173326; --warn: #F08A57; --bar: #1C2128; --bar-ink: #E7EBF0; color-scheme: dark;
   }
 }
 :root[data-theme="dark"] {
   --bg: #0E1115; --surface: #161A20; --sunk: #1C2128; --ink: #E7EBF0; --muted: #98A2AF; --line: #2A313A;
-  --accent: color-mix(in srgb, var(--brand, #4C74F0) 72%, #FFFFFF); --accent-ink: #0E1115;
+  --accent: color-mix(in srgb, var(--brand, #1E4FD6) 60%, #FFFFFF); --accent-ink: #0E1115;
   --ok: #5CC28E; --ok-soft: #173326; --warn: #F08A57; --bar: #1C2128; --bar-ink: #E7EBF0; color-scheme: dark;
 }
 * { box-sizing: border-box; }
@@ -107,10 +107,11 @@ main { padding: 16px; display: flex; flex-direction: column; gap: 14px; }
 .shead span { font-size: 12px; font-weight: 600; color: var(--muted); text-align: center; letter-spacing: .06em; text-transform: uppercase; }
 .shead span:first-child { text-align: left; }
 .srow .sn { font-family: var(--mono); font-size: 17px; }
-.srow input { width: 100%; min-width: 0; height: 48px; border-radius: 12px; border: 1px solid var(--line); background: var(--sunk); color: var(--muted);
+.srow input { width: 100%; min-width: 0; height: 48px; border-radius: 12px; border: 1px solid var(--line); background: var(--sunk); color: var(--muted); caret-color: transparent; -webkit-user-select: none; user-select: none; cursor: pointer;
   font-family: var(--mono); font-size: 19px; text-align: center; padding: 0 6px; -webkit-appearance: none; appearance: none; }
 .srow input::placeholder { color: var(--muted); opacity: .6; }
-.srow input:focus { outline: none; border-color: var(--accent); color: var(--ink); }
+.srow input:focus { outline: none; }
+.srow input.on { border: 2px solid var(--accent); color: var(--ink); }
 .srow.ck input { color: var(--ink); }
 .wbox { position: relative; min-width: 0; }
 .wbox .pct { position: absolute; left: 8px; top: 50%; transform: translateY(-50%); font-family: var(--mono); font-size: 11px; color: var(--muted); pointer-events: none; }
@@ -157,6 +158,21 @@ details.lh[open] > summary .n::after { transform: rotate(180deg); }
 details.lh > summary .c { font-family: var(--mono); font-size: 12px; color: var(--muted); white-space: nowrap; }
 details.lh .hist { padding-bottom: 12px; }
 
+/* Number pad, same as the personal app: digits on the left, a big check on the right that logs the set. */
+.kp { position: fixed; left: 0; right: 0; bottom: 0; z-index: 35; background: #1C2128; color: #E7EBF0; border-radius: 22px 22px 0 0; box-shadow: 0 -8px 30px rgba(0,0,0,.25);
+  padding: 14px max(16px, env(safe-area-inset-right, 0px)) calc(14px + env(safe-area-inset-bottom, 0px)) max(16px, env(safe-area-inset-left, 0px)); --kpa: color-mix(in srgb, var(--brand, #1E4FD6) 60%, #FFFFFF); }
+.kp[hidden] { display: none; }
+.kp-in { max-width: 520px; margin: 0 auto; }
+.kp-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
+.kp-k { aspect-ratio: 1.35; border-radius: 999px; border: 1px solid #3A424D; background: transparent; color: #E7EBF0; font-family: var(--body); font-size: 26px; display: grid; place-items: center; padding: 0; }
+.kp-k:active { background: #2A313A; }
+.kp-k svg, .kp-ok svg { fill: none; stroke: currentColor; stroke-linecap: round; stroke-linejoin: round; }
+.kp-k svg { width: 26px; height: 26px; stroke-width: 2; }
+.kp-ok { grid-row: span 3; border-radius: 28px; border: none; background: var(--kpa); color: #0E1115; display: grid; place-items: center; padding: 0; }
+.kp-ok svg { width: 34px; height: 34px; stroke-width: 2.6; }
+.kp-ok:active { filter: brightness(.9); }
+body.kp-open .app { padding-bottom: calc(var(--kph, 360px) + 40px); }
+body.kp-open .rest { bottom: var(--kph, 360px); z-index: 36; }
 .rest { position: fixed; left: 0; right: 0; bottom: calc(64px + env(safe-area-inset-bottom, 0px)); z-index: 6; max-width: 560px; margin: 0 auto;
   background: var(--bar); color: var(--bar-ink); padding: 10px 16px; display: flex; align-items: center; justify-content: space-between; gap: 12px; border-radius: 16px 16px 0 0; }
 .rest .l { font-size: 11px; letter-spacing: .12em; font-weight: 600; text-transform: uppercase; opacity: .75; }
@@ -181,6 +197,16 @@ details.lh .hist { padding-bottom: 12px; }
   </header>
   <main id="view"></main>
 </div>
+<div class="kp" id="kp" hidden role="dialog" aria-label="Number pad">
+  <div class="kp-in">
+    <div class="kp-grid">
+      <button class="kp-k" type="button" data-d="1">1</button><button class="kp-k" type="button" data-d="2">2</button><button class="kp-k" type="button" data-d="3">3</button><button class="kp-k" type="button" data-d="del" aria-label="Delete"><svg viewBox="0 0 24 24"><path d="M21 5H9l-6 7 6 7h12z"/><path d="m12 9 6 6M18 9l-6 6"/></svg></button>
+      <button class="kp-k" type="button" data-d="4">4</button><button class="kp-k" type="button" data-d="5">5</button><button class="kp-k" type="button" data-d="6">6</button><button class="kp-ok" type="button" id="kp-ok" aria-label="Log this set"><svg viewBox="0 0 24 24"><path d="m5 12.5 4.5 4.5L19 7.5"/></svg></button>
+      <button class="kp-k" type="button" data-d="7">7</button><button class="kp-k" type="button" data-d="8">8</button><button class="kp-k" type="button" data-d="9">9</button>
+      <button class="kp-k" type="button" data-d=".">.</button><button class="kp-k" type="button" data-d="0">0</button><button class="kp-k" type="button" id="kp-close" aria-label="Close number pad"><svg viewBox="0 0 24 24"><path d="m6 9 6 6 6-6"/></svg></button>
+    </div>
+  </div>
+</div>
 <div class="rest" id="rest" hidden>
   <div><div class="l" id="rest-l">Rest</div><div class="tm" id="rest-t">0:00</div></div>
   <div class="bt"><button type="button" id="rest-add">+30s</button><button type="button" id="rest-skip">Skip</button></div>
@@ -193,7 +219,7 @@ details.lh .hist { padding-bottom: 12px; }
 <script>
 (function () {
   "use strict";
-  var VERSION = "3";
+  var VERSION = "4";
 
   // Sample program for ?demo, so anyone can try the app without a coach's sheet.
   var DEMO_DATA = {
@@ -523,6 +549,53 @@ details.lh .hist { padding-bottom: 12px; }
   });
   document.getElementById("rest-skip").addEventListener("click", function () { clearInterval(restTick); document.getElementById("rest").hidden = true; });
 
+  // ---------- Number pad ----------
+  var KP = (function () {
+    var sheet = document.getElementById("kp"), cur = null, cfg = null, fresh = true;
+    function setH() { document.body.style.setProperty("--kph", sheet.offsetHeight + "px"); }
+    function open(inp, c) {
+      if (cur && cur !== inp) cur.classList.remove("on");
+      cur = inp; cfg = c; fresh = true;
+      inp.classList.add("on");
+      sheet.hidden = false; document.body.classList.add("kp-open"); setH();
+      setTimeout(function () { try { inp.scrollIntoView({ block: "center", behavior: "smooth" }); } catch (e) {} }, 30);
+    }
+    function close() {
+      if (cur) { cur.classList.remove("on"); cur.blur(); }
+      cur = null; cfg = null;
+      sheet.hidden = true; document.body.classList.remove("kp-open");
+    }
+    // The first key replaces what's in the box; later keys add to it.
+    function press(d) {
+      if (!cur) return;
+      var v = fresh ? "" : cur.value;
+      fresh = false;
+      if (d === "del") v = v.slice(0, -1);
+      else if (d === ".") { if (v.indexOf(".") < 0) v = (v || "0") + "."; }
+      else if (v.replace(".", "").length < 5) v = (v === "0" ? "" : v) + d;
+      cur.value = v;
+      if (cfg && cfg.onInput) cfg.onInput();
+    }
+    Array.prototype.forEach.call(sheet.querySelectorAll("[data-d]"), function (k) { k.addEventListener("click", function () { press(k.getAttribute("data-d")); }); });
+    document.getElementById("kp-close").addEventListener("click", close);
+    // The big check logs the set: fills any empty box with the target, checks the row, closes the pad.
+    document.getElementById("kp-ok").addEventListener("click", function () {
+      if (cur && cur.value.slice(-1) === ".") { cur.value = cur.value.slice(0, -1); if (cfg && cfg.onInput) cfg.onInput(); }
+      if (cfg && cfg.onLog) cfg.onLog();
+      close();
+    });
+    // Tapping outside the pad and the number boxes closes it.
+    document.addEventListener("pointerdown", function (e) {
+      if (!cur) return;
+      var t = e.target;
+      if (t.closest && (t.closest("#kp") || t.closest(".srow input") || t.closest("#rest"))) return;
+      close();
+    }, true);
+    window.addEventListener("resize", function () { if (!sheet.hidden) setH(); });
+    return { open: open, close: close };
+  })();
+  function stopRest() { clearInterval(restTick); restEnd = 0; document.getElementById("rest").hidden = true; }
+
   var toastT = null;
   function toast(msg) {
     var t = document.querySelector(".toast");
@@ -536,6 +609,7 @@ details.lh .hist { padding-bottom: 12px; }
   var TITLES = { today: "Today", program: "Program", history: "History" };
 
   function render() {
+    KP.close();
     document.querySelectorAll(".tabs button").forEach(function (b) {
       if (b.dataset.v === view) b.setAttribute("aria-current", "page"); else b.removeAttribute("aria-current");
     });
@@ -683,6 +757,7 @@ details.lh .hist { padding-bottom: 12px; }
   }
   function finishSession(s) {
     var lg = logOf(s.id), now = Date.now();
+    stopRest(); KP.close();
     lg.status = "Done"; lg.doneAt = new Date(now).toISOString(); if (!lg.date) lg.date = isoDay();
     if (lg.startedAt) lg.minutes = Math.max(1, Math.min(240, Math.round((now - lg.startedAt) / 60000)));
     save(LKEY, logs); queueSync(s.id, true);
@@ -700,6 +775,7 @@ details.lh .hist { padding-bottom: 12px; }
   // Clears every set and the time; notes stay. Two taps, so a stray one can't wipe the workout.
   function resetSession(s) {
     var lg = logOf(s.id);
+    stopRest(); KP.close();
     lg.items = {}; lg.status = "In progress";
     delete lg.doneAt; delete lg.minutes; delete lg.startedAt; delete lg.date;
     save(LKEY, logs); queueSync(s.id, true);
@@ -885,6 +961,12 @@ details.lh .hist { padding-bottom: 12px; }
       paint(i);
     }
     function lg() { return logOf(s.id); }
+    function padCfg(i, inp, f) {
+      return {
+        onInput: function () { v[f][i] = num(inp.value); save(LKEY, logs); if (v.ck[i]) queueSync(s.id); },
+        onLog: function () { if (!v.ck[i]) { setCheck(i, true); changed(true, i); } else changed(false, i); }
+      };
+    }
     function changed(startTimer, i) {
       save(LKEY, logs); queueSync(s.id);
       if (startTimer && it.rest) startRest(it.rest, it.n);
@@ -893,18 +975,18 @@ details.lh .hist { padding-bottom: 12px; }
       var p = it.per[i];
       var row = el("div", "srow");
       row.appendChild(el("span", "sn", String(i + 1)));
-      var r = el("input"); r.type = "text"; r.inputMode = "numeric"; r.autocomplete = "off";
+      var r = el("input"); r.type = "text"; r.readOnly = true; r.inputMode = "none"; r.autocomplete = "off";
       r.placeholder = p.reps && p.reps.length <= 7 ? p.reps : (p.rFill != null ? String(p.rFill) : "");
       r.setAttribute("aria-label", "Set " + (i + 1) + " reps");
       if (v.r[i] != null) r.value = v.r[i];
-      r.addEventListener("input", function () { v.r[i] = num(r.value); save(LKEY, logs); if (v.ck[i]) queueSync(s.id); });
+      r.addEventListener("click", function () { KP.open(r, padCfg(i, r, "r")); });
       var wb = el("div", "wbox");
       if (p.pct != null) { wb.classList.add("has-pct"); wb.appendChild(el("span", "pct", p.pct + "%")); }
-      var w = el("input"); w.type = "text"; w.inputMode = "decimal"; w.autocomplete = "off";
+      var w = el("input"); w.type = "text"; w.readOnly = true; w.inputMode = "none"; w.autocomplete = "off";
       w.placeholder = p.w != null ? String(p.w) : (p.text && p.text.length <= 6 ? p.text : "");
       w.setAttribute("aria-label", "Set " + (i + 1) + " weight in pounds");
       if (v.w[i] != null) w.value = v.w[i];
-      w.addEventListener("input", function () { v.w[i] = num(w.value); save(LKEY, logs); if (v.ck[i]) queueSync(s.id); });
+      w.addEventListener("click", function () { KP.open(w, padCfg(i, w, "w")); });
       wb.appendChild(w);
       var c = el("button", "ck-btn"); c.type = "button"; c.innerHTML = CHECK_SVG; c.setAttribute("aria-label", "Set " + (i + 1) + " done");
       c.addEventListener("click", function () { setCheck(i, !v.ck[i]); changed(v.ck[i], i); });
