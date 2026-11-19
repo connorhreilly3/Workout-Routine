@@ -270,7 +270,7 @@ body.kp-open .rest { bottom: var(--kph, 360px); z-index: 36; }
 <script>
 (function () {
   "use strict";
-  var VERSION = "13";
+  var VERSION = "14";
 
   // Sample program for ?demo, so anyone can try the app without a coach's sheet.
   var DEMO_DATA = {
@@ -561,7 +561,7 @@ body.kp-open .rest { bottom: var(--kph, 360px); z-index: 36; }
     e.textContent = t;
     e.className = "sync" + (s === "offline" || s === "error" || s === "badlink" ? " warn" : "");
   }
-  function refresh() {
+  function refresh(quiet) {
     if (DEMO || !API || !cfg.c) return;
     // Google reserves "c" and "sid" on script addresses, so the code goes as "client".
     fetch(API + "?client=" + encodeURIComponent(cfg.c))
@@ -582,7 +582,9 @@ body.kp-open .rest { bottom: var(--kph, 360px); z-index: 36; }
         Object.keys(logs).forEach(function (id) { if (logs[id].cleared && !queue[id] && !remoteStarted(id)) delete logs[id].cleared; });
         save(DKEY, data);
         brand();
-        if (changed && !typing()) render();
+        if (changed && !quiet && !typing()) render();
+        // While the app is open, redraw in place and keep the scroll position; wait if a timer or the keypad is up.
+        else if (changed && quiet && !busy()) { var y = window.scrollY; render(); window.scrollTo(0, y); }
         flush();
       })
       .catch(function () { if (!data) { loadError = "offline"; render(); } });
@@ -1428,12 +1430,41 @@ body.kp-open .rest { bottom: var(--kph, 360px); z-index: 36; }
     b.addEventListener("click", function () { view = b.dataset.v; sel = null; render(); window.scrollTo(0, 0); });
   });
   window.addEventListener("online", flush);
-  document.addEventListener("visibilitychange", function () { if (document.visibilityState === "visible") { flush(); } });
+  // ---------- Staying current ----------
+  // Only when the app opens or comes back on screen (no timers): it re-reads the sheet and checks for a newer
+  // version of itself. A new version reloads the page right then, back on the same screen, unless a rest timer
+  // or the keypad is up; then it waits for the next time. Logs are saved on the phone, so nothing is lost.
+  var newVersion = false, UIKEY = "coach-ui";
+  function busy() { return (restEnd && Date.now() < restEnd + 3000) || document.body.classList.contains("kp-open") || typing(); }
+  function checkVersion() {
+    if (location.protocol === "file:") return;
+    fetch(location.pathname + "?v=" + Date.now(), { cache: "no-store" })
+      .then(function (r) { return r.ok ? r.text() : ""; })
+      .then(function (t) {
+        var m = t.match(/var VERSION = "(\d+)"/);
+        if (m && +m[1] > +VERSION) { newVersion = true; maybeReload(); }
+      })
+      .catch(function () {});
+  }
+  function maybeReload() {
+    if (!newVersion || busy()) return;
+    try { sessionStorage.setItem(UIKEY, JSON.stringify({ view: view, sel: sel, pickWeek: pickWeek, y: window.scrollY })); } catch (e) {}
+    location.reload();
+  }
+  document.addEventListener("visibilitychange", function () {
+    if (document.visibilityState !== "visible") return;
+    flush(); refresh(true);
+    if (newVersion) maybeReload(); else checkVersion();
+  });
 
   window.CoachApp = { rowsFor: rowsFor, model: model, logs: function () { return logs; }, queue: function () { return queue; } };
   brand();
   setSync("");
+  var ui = null;
+  try { ui = JSON.parse(sessionStorage.getItem(UIKEY) || "null"); sessionStorage.removeItem(UIKEY); } catch (e) {}
+  if (ui) { view = ui.view || view; sel = ui.sel || null; pickWeek = ui.pickWeek != null ? ui.pickWeek : null; }
   render();
+  if (ui && ui.y) window.scrollTo(0, ui.y);
   refresh();
   flush();
 })();
