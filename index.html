@@ -348,6 +348,8 @@ input.w { width: 88px; } input.r { width: 64px; } input.s { width: 200px; max-wi
 .sumnotes { margin: 12px 16px 0; padding: 10px 12px; border-radius: 10px; background: var(--sunk); font-size: 14px; white-space: pre-wrap; }
 .sumact { padding: 16px; display: flex; flex-direction: column; gap: 12px; align-items: stretch; }
 .sumact .linkbtn { align-self: center; }
+.resetbtn { align-self: center; background: none; border: none; padding: 8px 12px; color: var(--test); font-weight: 600; font-size: 14px; cursor: pointer; border-radius: 10px; }
+.resetbtn.armed { background: var(--test); color: #FFFFFF; }
 .editbtn { width: 100%; min-height: 50px; border-radius: 12px; border: 1px solid var(--line); background: var(--sunk); color: var(--ink); font-weight: 700; font-size: 16px; cursor: pointer; }
 .empty { padding: 20px 16px; color: var(--muted); }
 
@@ -540,7 +542,7 @@ input.w { width: 88px; } input.r { width: 64px; } input.s { width: 200px; max-wi
   var ONE_RM = Object.assign({}, ONE_RM_PLAN, recall("wr-1rm") || {});
   var TM = Object.assign({}, TM_PLAN, recall("wr-tm") || {});
   // Shown at the bottom of the Maxes tab; bump it with every update so it's easy to tell which version a phone has.
-  var APP_VERSION = "20 · Nov 19";
+  var APP_VERSION = "21 · Nov 19";
   var TM_NAMES = { squat: "Back squat", bench: "Bench press", trap: "Trap bar deadlift", press: "Strict press", clean: "Power clean" };
   var BARBELL = { squat: true, bench: true, press: true, clean: true };
 
@@ -1371,6 +1373,22 @@ input.w { width: 88px; } input.r { width: 64px; } input.s { width: 200px; max-wi
       finishSession(id);
     });
     fin.appendChild(fb);
+    if (done && editing[id]) {
+      // Two taps, so a stray one can't wipe the workout.
+      var rz = el("button", "resetbtn", "Reset workout"); rz.type = "button";
+      var armed = null;
+      rz.addEventListener("click", function () {
+        if (!armed) {
+          rz.textContent = "Tap again to clear every set";
+          rz.classList.add("armed");
+          armed = setTimeout(function () { armed = null; rz.textContent = "Reset workout"; rz.classList.remove("armed"); }, 4000);
+          return;
+        }
+        clearTimeout(armed);
+        resetSession(id);
+      });
+      fin.appendChild(rz);
+    }
     card.appendChild(fin);
     return card;
   }
@@ -1401,6 +1419,18 @@ input.w { width: 88px; } input.r { width: 64px; } input.s { width: 200px; max-wi
     store("ptb-running", running);
     requestWake();
     render(); tickElapsed(); scrollToSession();
+  }
+  // Clears every set, weight, score and the time, and marks the workout not done. Notes and a moved day stay.
+  function resetSession(id) {
+    editLog(id, function (d) {
+      var keep = { notes: d.notes, moved: d.moved, week: d.week, lift: d.lift, extra: d.extra };
+      Object.keys(d).forEach(function (k) { delete d[k]; });
+      Object.keys(keep).forEach(function (k) { if (keep[k] != null) d[k] = keep[k]; });
+      d.items = {}; d.checks = {};
+    }, true);
+    editing[id] = false;
+    if (running && running.id === id) endSession();
+    render(); scrollToSession();
   }
   // Heaviest checked weight for a lift in sessions finished before this one.
   function prevTop(name, id) {
