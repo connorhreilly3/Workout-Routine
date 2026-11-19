@@ -124,6 +124,43 @@ main { padding: 16px; display: flex; flex-direction: column; gap: 14px; }
 .ck-all svg { opacity: .55; }
 textarea { width: 100%; min-height: 90px; border-radius: 12px; border: 1px solid var(--line); background: var(--sunk); color: var(--ink); font: inherit; padding: 10px 12px; resize: vertical; }
 .small { font-size: 14px; }
+.hype { border-radius: 18px; padding: 16px 18px; background: var(--accent); color: var(--accent-ink); }
+.hype-line { font-family: var(--display); font-weight: 800; font-size: 32px; line-height: 1; text-transform: uppercase; text-wrap: balance; letter-spacing: .01em; }
+.sesshead { display: flex; flex-direction: column; gap: 6px; }
+.running { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 12px 14px; border-radius: 14px; background: var(--accent-soft); font-size: 15px; font-weight: 600; }
+.running .mono { font-family: var(--mono); font-size: 22px; font-weight: 600; color: var(--accent); }
+.lastcard { display: flex; flex-direction: column; border-radius: 12px; background: var(--sunk); border: 1px solid var(--line); padding: 2px 14px; }
+.lastcard .lr { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; padding: 8px 0; font-size: 12px; font-weight: 600; letter-spacing: .1em; text-transform: uppercase; color: var(--muted); }
+.lastcard .lr + .lr { border-top: 1px solid var(--line); }
+.lastcard .lr > span:first-child { white-space: nowrap; }
+.lastcard .lv { font-family: var(--mono); font-size: 13px; font-weight: 600; letter-spacing: 0; text-transform: none; color: var(--accent); text-align: right; }
+.lastcard .lv.muted { color: var(--muted); font-weight: 500; }
+.lrbtn { width: 100%; background: none; border: none; border-top: 1px solid var(--line); margin: 0; font-family: inherit; text-align: left; }
+.lastcard > .lrbtn:first-child { border-top: none; }
+.lrbtn .chev { display: inline-block; margin-left: 6px; font-size: 11px; transition: transform .15s; }
+.lrbtn[aria-expanded="true"] .chev { transform: rotate(180deg); }
+.lastcard .hist { padding-bottom: 8px; }
+.card h3 { font-family: var(--body); text-transform: none; font-weight: 700; font-size: 19px; letter-spacing: 0; }
+.hsub { font-size: 13px; color: var(--muted); margin-top: -8px; }
+.stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+.stat { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.stat::before { content: ""; width: 22px; height: 3px; border-radius: 2px; background: var(--accent); margin-bottom: 6px; }
+.stat .k { font-size: 11px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: var(--muted); }
+.stat .v { font-family: var(--display); font-weight: 800; font-size: 34px; line-height: 1; font-variant-numeric: tabular-nums; }
+.bars { display: grid; gap: 2px; align-items: end; height: 120px; border-bottom: 1px solid var(--line); }
+.barc { height: 100%; display: flex; flex-direction: column; justify-content: flex-end; align-items: center; background: none; border: none; padding: 0 6px; }
+.barc .bf { width: 100%; max-width: 44px; background: var(--accent); border-radius: 4px 4px 0 0; }
+.barc[aria-pressed="true"] .bf { outline: 2px solid var(--ink); outline-offset: 2px; }
+.barx { display: grid; gap: 2px; text-align: center; font-size: 12px; color: var(--muted); font-family: var(--mono); }
+.barx .now { color: var(--ink); font-weight: 600; }
+.readout { font-family: var(--mono); font-size: 13px; color: var(--muted); min-height: 1.4em; }
+.mlrow { display: grid; grid-template-columns: 1fr auto; gap: 2px 10px; padding: 10px 0; border-top: 1px solid var(--line); }
+.mlrow:first-of-type { border-top: none; }
+.mlrow .n { font-weight: 700; }
+.mlrow .e { font-family: var(--mono); font-weight: 600; text-align: right; }
+.mlrow .d { grid-column: 1 / -1; font-family: var(--mono); font-size: 12px; color: var(--muted); }
+.meter { grid-column: 1 / -1; height: 6px; border-radius: 3px; background: var(--sunk); overflow: hidden; }
+.meter > div { height: 100%; background: var(--accent); border-radius: 3px; }
 .linkbtn.center { align-self: center; text-align: center; }
 .card.summary { gap: 10px; }
 .donebadge { display: inline-flex; align-items: center; gap: 8px; align-self: flex-start; padding: 5px 12px 5px 8px; border-radius: 99px; background: var(--ok-soft); color: var(--ok); font-size: 13px; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; animation: pop .35s ease-out; }
@@ -219,7 +256,7 @@ body.kp-open .rest { bottom: var(--kph, 360px); z-index: 36; }
 <script>
 (function () {
   "use strict";
-  var VERSION = "4";
+  var VERSION = "5";
 
   // Sample program for ?demo, so anyone can try the app without a coach's sheet.
   var DEMO_DATA = {
@@ -482,8 +519,9 @@ body.kp-open .rest { bottom: var(--kph, 360px); z-index: 36; }
   }
   function setSync(s) {
     syncState = s;
-    var t = { saving: "Saving…", saved: "Saved", offline: "Offline · will send later", error: "Couldn't save · will retry", badlink: "Link not active" }[s] || "";
-    if (DEMO) t = "Demo";
+    // Silent when saving works; only problems show.
+    var t = { offline: "Offline · will send later", error: "Couldn't save · will retry", badlink: "Link not active" }[s] || "";
+    if (DEMO) t = "";
     var e = document.getElementById("sync");
     e.textContent = t;
     e.className = "sync" + (s === "offline" || s === "error" || s === "badlink" ? " warn" : "");
@@ -662,10 +700,47 @@ body.kp-open .rest { bottom: var(--kph, 360px); z-index: 36; }
     return b;
   }
 
+  var HYPE = {
+    lift: [
+      "Lift like the plates owe you money.",
+      "The bar has no idea what's coming.",
+      "Heavy things won't lift themselves.",
+      "Chalk up. Get loud. Get strong.",
+      "Big lift energy only.",
+      "Somewhere a dumbbell just got nervous.",
+      "Today's forecast: heavy, with a chance of PRs.",
+      "Plates on. Excuses off."
+    ],
+    done: [
+      "Rest hard. Come back dangerous.",
+      "Recovery is training. You're still winning.",
+      "Tomorrow's workout is already nervous."
+    ]
+  };
+  function dayNum() { var d = new Date(); return Math.floor(new Date(d.getFullYear(), d.getMonth(), d.getDate()).getTime() / 86400000); }
+  function hype(kind) {
+    var L = HYPE[kind], c = el("section", "hype");
+    c.appendChild(el("div", "hype-line", L[dayNum() % L.length]));
+    return c;
+  }
+  // Today's workout: one finished today, else the next one not done yet.
+  function todaySession() {
+    var t = isoDay(), ss = model().sessions;
+    for (var i = 0; i < ss.length; i++) {
+      var id = ss[i].id, lg = logs[id], rem = remote()[id];
+      if (hasLocal(id) ? (lg.status === "Done" && lg.date === t) : (rem && rem.status === "Done" && rem.date === t)) return ss[i];
+    }
+    return nextSession();
+  }
   function renderToday() {
     if (DEMO) viewEl.appendChild(el("div", "banner", "Demo program. Nothing you log here goes to a coach."));
     var tip = homeTip(); if (tip) viewEl.appendChild(tip);
-    var m = model(), nx = nextSession();
+    var m = model(), ts = m.sessions.length ? todaySession() : null;
+    if (ts) {
+      viewEl.appendChild(hype(isDone(ts.id) ? "done" : "lift"));
+      return renderSession(ts, true);
+    }
+    var nx = nextSession();
     var total = m.sessions.length, done = m.sessions.filter(function (s) { return isDone(s.id); }).length;
     var c = el("section", "card hero");
     if (!total) {
@@ -754,6 +829,29 @@ body.kp-open .rest { bottom: var(--kph, 360px); z-index: 36; }
     if (rem.minutes != null) lg.minutes = rem.minutes;
     if (lg.status === "Done") lg.doneAt = (rem.date || isoDay()) + "T12:00:00";
     save(LKEY, logs);
+  }
+  // Start button, then a running clock from the start (or the first checked set).
+  var runTick = null;
+  function fmtClock(sec) { var h = Math.floor(sec / 3600), m = Math.floor(sec / 60) % 60, x = sec % 60; return (h ? h + ":" + pad(m) : m) + ":" + pad(x); }
+  function runBox(s) {
+    var lg = logOf(s.id), box = el("div"); box.id = "runbox";
+    if (lg.startedAt) {
+      var r = el("div", "running");
+      r.appendChild(el("span", null, "Workout running"));
+      var c = el("span", "mono"); c.id = "elapsed"; r.appendChild(c);
+      box.appendChild(r);
+      var tick = function () { var e = document.getElementById("elapsed"); if (!e) { clearInterval(runTick); return; } e.textContent = fmtClock(Math.max(0, Math.floor((Date.now() - lg.startedAt) / 1000))); };
+      clearInterval(runTick); tick(); runTick = setInterval(tick, 1000);
+    } else {
+      var b = el("button", "btn", "Start workout"); b.type = "button";
+      b.addEventListener("click", function () {
+        lg.startedAt = Date.now(); if (!lg.date) lg.date = isoDay(); if (lg.status !== "Done") lg.status = "In progress";
+        save(LKEY, logs);
+        var rb = document.getElementById("runbox"); if (rb) rb.parentNode.replaceChild(runBox(s), rb);
+      });
+      box.appendChild(b);
+    }
+    return box;
   }
   function finishSession(s) {
     var lg = logOf(s.id), now = Date.now();
@@ -875,16 +973,19 @@ body.kp-open .rest { bottom: var(--kph, 360px); z-index: 36; }
     viewEl.appendChild(rb);
   }
 
-  function renderSession(s) {
+  function renderSession(s, inline) {
     hydrate(s);
     var lg = logOf(s.id);
-    var back = el("button", "linkbtn back", "‹ Back"); back.type = "button";
-    back.addEventListener("click", function () { sel = null; render(); window.scrollTo(0, 0); });
-    viewEl.appendChild(back);
+    if (!inline) {
+      var back = el("button", "linkbtn back", "‹ Back"); back.type = "button";
+      back.addEventListener("click", function () { sel = null; render(); window.scrollTo(0, 0); });
+      viewEl.appendChild(back);
+    }
     if (isDone(s.id) && !editing[s.id]) return renderSummary(s);
-    var head = el("div");
-    head.appendChild(el("div", "eyebrow", sessLabel(s) + (isDone(s.id) ? " · Done" : "")));
+    var head = el("div", "sesshead");
+    head.appendChild(el("div", "eyebrow", (inline ? "Today · " : "") + sessLabel(s) + (isDone(s.id) ? " · Done" : "")));
     head.appendChild(el("h2", null, s.title));
+    if (!isDone(s.id)) head.appendChild(runBox(s));
     viewEl.appendChild(head);
     s.items.forEach(function (it) { viewEl.appendChild(renderItem(s, it)); });
 
@@ -926,15 +1027,19 @@ body.kp-open .rest { bottom: var(--kph, 360px); z-index: 36; }
     box.appendChild(el("div", "rx", it.rx));
     if (it.notes) box.appendChild(el("div", "cnote", it.notes));
 
-    var past = historyOf(it.n, s.id);
+    var past = historyOf(it.n, s.id), lc = el("div", "lastcard");
     if (past.length) {
-      var lb = el("button", "last"); lb.type = "button"; lb.setAttribute("aria-expanded", "false");
-      var l1 = el("span", null, "Last time"); l1.appendChild(el("span", "chev", "▾"));
-      lb.appendChild(l1); lb.appendChild(el("span", "v", past[0].txt));
+      // Tap "Last" for every time they've done this exercise.
+      var lb = el("button", "lr lrbtn"); lb.type = "button"; lb.setAttribute("aria-expanded", "false");
+      var l1 = el("span", null, "Last"); l1.appendChild(el("span", "chev", "▾"));
+      lb.appendChild(l1); lb.appendChild(el("span", "lv", past[0].txt));
       var hl = histList(past, it.n); hl.hidden = true;
       lb.addEventListener("click", function () { hl.hidden = !hl.hidden; lb.setAttribute("aria-expanded", String(!hl.hidden)); });
-      box.appendChild(lb); box.appendChild(hl);
+      lc.appendChild(lb); lc.appendChild(hl);
+    } else {
+      var r1 = el("div", "lr"); r1.appendChild(el("span", null, "Last")); r1.appendChild(el("span", "lv muted", "None logged yet")); lc.appendChild(r1);
     }
+    box.appendChild(lc);
 
     var v = itemLog(s.id, it.key);
     var wrap = el("div", "sets");
@@ -955,7 +1060,10 @@ body.kp-open .rest { bottom: var(--kph, 360px); z-index: 36; }
         if (v.r[i] == null && it.per[i].rFill != null) { v.r[i] = it.per[i].rFill; R_[i].value = v.r[i]; }
         if (v.w[i] == null && it.per[i].w != null) { v.w[i] = it.per[i].w; W_[i].value = v.w[i]; }
         if (!lg().date) lg().date = isoDay();
-        if (!lg().startedAt) lg().startedAt = Date.now();
+        if (!lg().startedAt) {
+          lg().startedAt = Date.now();
+          var rb = document.getElementById("runbox"); if (rb) rb.parentNode.replaceChild(runBox(s), rb);
+        }
         if (lg().status !== "Done") lg().status = "In progress";
       }
       paint(i);
@@ -1004,7 +1112,111 @@ body.kp-open .rest { bottom: var(--kph, 360px); z-index: 36; }
     return box;
   }
 
+  // Every workout with checked sets, from this phone or the sheet: [{ id, week, date, done, minutes, sets: [{ n, w, r, timed }] }]
+  function loggedSessions() {
+    var out = [], rem = remote();
+    model().sessions.forEach(function (s) {
+      var lg = logs[s.id], sets = [], one;
+      if (hasLocal(s.id)) {
+        s.items.forEach(function (it) {
+          var v = lg.items[it.key]; if (!v) return;
+          for (var i = 0; i < it.sets; i++) if (v.ck[i]) sets.push({ n: it.n, w: v.w[i], r: v.r[i] != null ? v.r[i] : it.per[i].rFill, timed: /yd|sec|min|cal|\bm\b/i.test(it.per[i].reps || "") });
+        });
+        one = { id: s.id, week: s.week, date: lg.date || "", done: lg.status === "Done", minutes: lg.minutes || 0, sets: sets };
+      } else if (rem[s.id]) {
+        var R0 = rem[s.id];
+        R0.order.forEach(function (n) {
+          var it = null; s.items.forEach(function (x) { if (!it && norm(x.n) === norm(n)) it = x; });
+          R0.ex[n].forEach(function (x) { if (x.done) { var p = it && it.per[x.set - 1]; sets.push({ n: n, w: x.w, r: x.r != null ? x.r : (p ? p.rFill : null), timed: p ? /yd|sec|min|cal|\bm\b/i.test(p.reps || "") : false }); } });
+        });
+        one = { id: s.id, week: s.week, date: R0.date || "", done: R0.status === "Done", minutes: R0.minutes || 0, sets: sets };
+      }
+      if (one && (one.sets.length || one.done)) out.push(one);
+    });
+    return out;
+  }
+  function e1rm(w, r) { return r <= 1 ? w : Math.round(w * (1 + r / 30)); }
+  function bigNum(n) { return n >= 1e6 ? (n / 1e6).toFixed(2) + "M" : n >= 1e4 ? Math.round(n / 1000) + "K" : Math.round(n).toLocaleString("en-US"); }
+  function statTile(k, v) { var d = el("div", "stat"); d.appendChild(el("span", "k", k)); d.appendChild(el("span", "v", v)); return d; }
+  function volOf(x) { var v = 0, r = 0; x.sets.forEach(function (t) { if (t.r && !t.timed) { r += t.r; if (t.w > 0) v += t.w * t.r; } }); return { vol: v, reps: r }; }
+  var barSel = null;
   function renderHistory() {
+    var L = loggedSessions(), m = model();
+    if (L.length) {
+      var all = { vol: 0, reps: 0, n: 0, min: 0 }, wk = {};
+      L.forEach(function (x) {
+        var t = volOf(x);
+        all.vol += t.vol; all.reps += t.reps; all.min += x.minutes; if (x.done) all.n++;
+        var w = wk[x.week] || (wk[x.week] = { vol: 0, reps: 0, n: 0, min: 0 });
+        w.vol += t.vol; w.reps += t.reps; w.min += x.minutes; if (x.done) w.n++;
+      });
+      var dates = L.map(function (x) { return x.date; }).filter(Boolean).sort();
+      var c1 = el("section", "card");
+      c1.appendChild(el("h3", null, "All time"));
+      if (dates[0]) c1.appendChild(el("p", "hsub", "Since " + fmtDay(dates[0])));
+      var g1 = el("div", "stats");
+      g1.appendChild(statTile("Volume (lb)", bigNum(all.vol))); g1.appendChild(statTile("Reps", all.reps.toLocaleString("en-US"))); g1.appendChild(statTile("Workouts", String(all.n)));
+      c1.appendChild(g1);
+      viewEl.appendChild(c1);
+
+      var ts = todaySession(), cw = ts ? ts.week : m.weeks[m.weeks.length - 1], tw = wk[cw] || { vol: 0, reps: 0, n: 0, min: 0 };
+      var planned = m.sessions.filter(function (x) { return x.week === cw; }).length;
+      var c2 = el("section", "card");
+      c2.appendChild(el("h3", null, "This week"));
+      c2.appendChild(el("p", "hsub", "Week " + cw + " · " + tw.n + " of " + planned + " workouts done"));
+      var g2 = el("div", "stats");
+      g2.appendChild(statTile("Volume (lb)", bigNum(tw.vol))); g2.appendChild(statTile("Reps", tw.reps.toLocaleString("en-US"))); g2.appendChild(statTile("Hours", String(Math.round(tw.min / 6) / 10)));
+      c2.appendChild(g2);
+      viewEl.appendChild(c2);
+
+      var c3 = el("section", "card");
+      c3.appendChild(el("h3", null, "Weekly volume"));
+      c3.appendChild(el("p", "hsub", "Pounds moved each week of the program. Tap a bar."));
+      var max = 1; m.weeks.forEach(function (w) { if (wk[w] && wk[w].vol > max) max = wk[w].vol; });
+      var bars = el("div", "bars"), bx = el("div", "barx"), ro = el("div", "readout");
+      bars.style.gridTemplateColumns = bx.style.gridTemplateColumns = "repeat(" + m.weeks.length + ", 1fr)";
+      bars.setAttribute("role", "img");
+      bars.setAttribute("aria-label", "Weekly volume: " + m.weeks.map(function (w) { return "week " + w + " " + Math.round((wk[w] || {}).vol || 0) + " lb"; }).join(", "));
+      function readout(w) { var v = wk[w] || { vol: 0, reps: 0, n: 0 }; ro.textContent = "Week " + w + ": " + Math.round(v.vol).toLocaleString("en-US") + " lb · " + v.reps + " reps · " + v.n + (v.n === 1 ? " workout" : " workouts"); }
+      if (barSel == null || m.weeks.indexOf(barSel) < 0) barSel = cw;
+      m.weeks.forEach(function (w, j) {
+        var v = (wk[w] || {}).vol || 0;
+        var b = el("button", "barc"); b.type = "button";
+        b.setAttribute("aria-pressed", String(w === barSel)); b.setAttribute("aria-label", "Week " + w + ", " + Math.round(v) + " pounds");
+        var f = el("div", "bf"); f.style.height = (v ? Math.max(3, 100 * v / max) : 0) + "%"; b.appendChild(f);
+        b.addEventListener("click", function () { barSel = w; Array.prototype.forEach.call(bars.children, function (x, k) { x.setAttribute("aria-pressed", String(k === j)); }); readout(w); });
+        bars.appendChild(b);
+        bx.appendChild(el("span", w === cw ? "now" : null, "W" + w));
+      });
+      readout(barSel);
+      c3.appendChild(bars); c3.appendChild(bx); c3.appendChild(ro);
+      viewEl.appendChild(c3);
+
+      // Best set and estimated 1-rep max per weighted exercise (Epley), against the max on the coach's sheet.
+      var best = {};
+      L.forEach(function (x) { x.sets.forEach(function (t) {
+        if (!(t.w > 0) || !t.r || t.timed || t.r > 12) return;
+        var e = e1rm(t.w, t.r), k = norm(t.n), cur = best[k];
+        if (!cur || e > cur.e) best[k] = { n: t.n, e: e, w: t.w, r: t.r, date: x.date };
+      }); });
+      var bl = Object.keys(best).map(function (k) { return best[k]; }).sort(function (a, b) { return b.e - a.e; }).slice(0, 8);
+      if (bl.length) {
+        var c4 = el("section", "card");
+        c4.appendChild(el("h3", null, "Best lifts"));
+        c4.appendChild(el("p", "hsub", "Best set so far and its estimated 1-rep max" + (Object.keys((data && data.maxes) || {}).length ? ", against your max on file." : ".")));
+        var ml = el("div");
+        bl.forEach(function (bb) {
+          var r = el("div", "mlrow"), mxx = maxFor(bb.n);
+          r.appendChild(el("span", "n", bb.n));
+          r.appendChild(el("span", "e", "e1RM " + bb.e));
+          if (mxx) { var mt = el("div", "meter"), f = el("div"); f.style.width = Math.min(100, 100 * bb.e / mxx) + "%"; mt.appendChild(f); r.appendChild(mt); }
+          r.appendChild(el("span", "d", "Best " + bb.w + " × " + bb.r + (bb.date ? " on " + fmtDay(bb.date).replace(/^\w+, /, "") : "") + (mxx ? " · max " + mxx + " (" + Math.round(100 * bb.e / mxx) + "%)" : "")));
+          ml.appendChild(r);
+        });
+        c4.appendChild(ml);
+        viewEl.appendChild(c4);
+      }
+    }
     var names = [], seenN = {};
     function add(n) { var k = norm(n); if (k && !seenN[k]) { seenN[k] = 1; names.push(n); } }
     model().sessions.forEach(function (s) { s.items.forEach(function (it) { add(it.n); }); });
@@ -1016,7 +1228,8 @@ body.kp-open .rest { bottom: var(--kph, 360px); z-index: 36; }
       viewEl.appendChild(c); return;
     }
     groups.sort(function (a, b) { return String(b.list[0].date).localeCompare(String(a.list[0].date)) || a.n.localeCompare(b.n); });
-    c.appendChild(el("p", "muted", "Tap a lift to see every session."));
+    c.appendChild(el("h3", null, "Lift history"));
+    c.appendChild(el("p", "hsub", "Tap a lift to see every session."));
     groups.forEach(function (g) {
       var d = el("details", "lh"), sm = el("summary");
       sm.appendChild(el("span", "n", g.n));
