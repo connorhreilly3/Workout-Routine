@@ -399,6 +399,7 @@ input.w { width: 88px; } input.r { width: 64px; } input.s { width: 200px; max-wi
 .mvd small { font-family: var(--mono); font-weight: 400; color: var(--muted); font-size: 12px; }
 .mvd[aria-pressed="true"] { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
 .mvd[aria-pressed="true"] small { color: var(--accent-ink); }
+.mvd:disabled { opacity: .35; cursor: default; }
 
 /* History */
 .hcard { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 16px; display: flex; flex-direction: column; gap: 12px; }
@@ -542,7 +543,7 @@ input.w { width: 88px; } input.r { width: 64px; } input.s { width: 200px; max-wi
   var ONE_RM = Object.assign({}, ONE_RM_PLAN, recall("wr-1rm") || {});
   var TM = Object.assign({}, TM_PLAN, recall("wr-tm") || {});
   // Shown at the bottom of the Maxes tab; bump it with every update so it's easy to tell which version a phone has.
-  var APP_VERSION = "22 · Nov 19";
+  var APP_VERSION = "23 · Nov 19";
   var TM_NAMES = { squat: "Back squat", bench: "Bench press", trap: "Trap bar deadlift", press: "Strict press", clean: "Power clean" };
   var BARBELL = { squat: true, bench: true, press: true, clean: true };
 
@@ -1195,10 +1196,23 @@ input.w { width: 88px; } input.r { width: 64px; } input.s { width: 200px; max-wi
       "Rest hard. Come back dangerous.",
       "Recovery is training. You're still winning.",
       "Tomorrow's lift is already nervous."
+    ],
+    done: [
+      "Workout done. Strong work today.",
+      "Today's work is in the bank.",
+      "Showed up. Lifted. Crushed it.",
+      "That's a wrap. Earned every rep."
     ]
   };
+  // Today's lift (or extra session) is finished.
+  function doneToday(te) {
+    var ids = [];
+    for (var x = 0; x < EXTRA.length; x++) if (EXTRA[x].date === today) ids.push(EXTRA[x].id);
+    if (te) te.ents.forEach(function (e) { if (e.kind === "lift") { var s = SESS[e.lift][te.week - 1]; if (s && !s.off) ids.push(docId(te.week, e.lift)); } });
+    return ids.length > 0 && ids.every(function (id) { return !!currentLog(id).done; });
+  }
   function hypeCard(te, noLift, classes) {
-    var kind = !noLift ? "lift" : classes.length ? "class" : "rest";
+    var kind = !noLift ? (doneToday(te) ? "done" : "lift") : classes.length ? "class" : "rest";
     var L = HYPE[kind];
     var card = el("section", "hype");
     card.appendChild(el("div", "hype-line", L[dayNum() % L.length]));
@@ -1401,6 +1415,7 @@ input.w { width: 88px; } input.r { width: 64px; } input.s { width: 200px; max-wi
     else if (lg.startedAt) mins = (now - Date.parse(lg.startedAt)) / 60000;
     if (mins != null) mins = Math.max(1, Math.min(240, Math.round(mins)));
     editLog(id, function (d) { d.done = true; d.doneAt = new Date(now).toISOString(); if (mins != null) d.minutes = mins; }, true);
+    stopTimer();
     if (running && running.id === id) endSession();
     editing[id] = false;
     if (navigator.vibrate) try { navigator.vibrate(40); } catch (e) {}
@@ -1416,10 +1431,11 @@ input.w { width: 88px; } input.r { width: 64px; } input.s { width: 200px; max-wi
     requestWake();
     render(); tickElapsed(); scrollToSession();
   }
-  // Clears every set, weight, score and the time, and marks the workout not done. Notes and a moved day stay.
+  // Clears every set, weight, score, note and the time, and marks the workout not done. A moved day stays.
   function resetSession(id) {
+    stopTimer();
     editLog(id, function (d) {
-      var keep = { notes: d.notes, moved: d.moved, week: d.week, lift: d.lift, extra: d.extra };
+      var keep = { moved: d.moved, week: d.week, lift: d.lift, extra: d.extra };
       Object.keys(d).forEach(function (k) { delete d[k]; });
       Object.keys(keep).forEach(function (k) { if (keep[k] != null) d[k] = keep[k]; });
       d.items = {}; d.checks = {};
@@ -1525,10 +1541,12 @@ input.w { width: 88px; } input.r { width: 64px; } input.s { width: 200px; max-wi
     return card;
   }
 
+  // A finished workout (in Edit) moves to the day it was really done, up to today.
   function moveBox(pick) {
     var w = WEEKS[pick.week - 1], id = docId(pick.week, pick.lift), cur = liftDayIdx(pick.week, pick.lift), def = planDay(pick.week, pick.lift);
+    var fin = currentLog(id).done && currentLog(id).doneAt;
     var box = el("div", "move");
-    var t = el("button", "linkbtn", cur === def ? "Move to another day" : "Moved to " + DOW[cur] + " · change");
+    var t = el("button", "linkbtn", fin || cur === def ? "Move to another day" : "Moved to " + DOW[cur] + " · change");
     t.type = "button"; t.setAttribute("aria-expanded", "false");
     var row = el("div", "mvdays"); row.hidden = true;
     for (var i = 0; i < 6; i++) (function (i) {
@@ -1537,8 +1555,13 @@ input.w { width: 88px; } input.r { width: 64px; } input.s { width: 200px; max-wi
       b.setAttribute("aria-pressed", String(i === cur));
       b.appendChild(el("span", null, DOW[i])); b.appendChild(el("small", null, String(dt.getUTCDate())));
       if (i === def) b.title = "Planned day";
+      if (fin && iso(dt) > today) b.disabled = true;
       b.addEventListener("click", function () {
-        editLog(id, function (d) { if (i === def) delete d.moved; else d.moved = iso(dt); }, true);
+        if (fin) {
+          // Same time of day, on the chosen date; the calendar, history and Sheet all follow doneAt.
+          editLog(id, function (d) { d.doneAt = new Date(Date.parse(d.doneAt) + Math.round((parseISO(iso(dt)) - parseISO(etDate(d.doneAt))) / 86400000) * 86400000).toISOString(); }, true);
+          sel = pick; // keep this workout open even if it no longer belongs on Today
+        } else editLog(id, function (d) { if (i === def) delete d.moved; else d.moved = iso(dt); }, true);
         render();
       });
       row.appendChild(b);
@@ -1582,8 +1605,25 @@ input.w { width: 88px; } input.r { width: 64px; } input.s { width: 200px; max-wi
     if (arr[i] && onCheck) onCheck();
     if (arr[i]) {
       var rs = parseRest(b.rest);
-      if (rs && (b.items.length === 1 || idx === b.items.length - 1)) startTimer(rs, b.name);
+      if (workoutOver(id, b, idx, i, len)) stopTimer();
+      else if (rs && (b.items.length === 1 || idx === b.items.length - 1)) startTimer(rs, b.name);
     }
+  }
+  // The final set of the last exercise with a rest time (Recovery/Sauna don't count), or every set checked
+  // in any order: the lifting is over, so no rest timer.
+  function workoutOver(id, b, idx, i, len) {
+    var s = sessDef(id), blocks = s && s.blocks ? s.blocks.filter(function (x) { return x.items && x.items.length; }) : [];
+    if (!blocks.length) return false;
+    var rested = blocks.filter(function (x) { return parseRest(x.rest) > 0; });
+    var lastB = rested[rested.length - 1] || blocks[blocks.length - 1];
+    if ((lastB === b || lastB.name === b.name) && idx === b.items.length - 1 && i === len - 1) return true;
+    return (rested.length ? rested : blocks).every(function (x) {
+      return x.items.every(function (it) {
+        if (it.log === "score") return true;
+        var n = it.main ? expandSets(it).length : roundsOf(it, x);
+        return checksOf(id, it.k, n).slice(0, n).every(Boolean);
+      });
+    });
   }
 
   // "Last ▾  10 × 10 @ 60 lb" under a single-weight exercise; tap it for every session.
@@ -1975,10 +2015,11 @@ input.w { width: 88px; } input.r { width: 64px; } input.s { width: 200px; max-wi
     if (!timer.end) { startTimer(30, "extra"); return; }
     timer.end += 30000; timer.total += 30; tick();
   });
-  document.getElementById("tskip").addEventListener("click", function () {
+  function stopTimer() {
     clearInterval(timer.iv); timer.iv = null; timer.end = 0; clearTimeout(timer.hideT);
     timerEl.hidden = true; timerEl.classList.remove("go");
-  });
+  }
+  document.getElementById("tskip").addEventListener("click", stopTimer);
 
   // ---------- Keyboard: Enter closes the keyboard; tapping outside a field does too ----------
   document.addEventListener("keydown", function (e) {
@@ -2760,8 +2801,46 @@ input.w { width: 88px; } input.r { width: 64px; } input.s { width: 200px; max-wi
   }
   window.WR = { block: BLOCK, rows: sheetRows, bodyweightRow: bodyweightRow, fromSheet: fromSheet };
 
+  // ---------- Staying current ----------
+  // When the app comes back on screen (no timers), it checks for a newer version of itself and reloads right then,
+  // back on the same screen, unless a rest or WOD timer, the keypad, typing or an unsaved change is in progress;
+  // then it waits for the next time. Everything logged is already saved, so nothing is lost.
+  var newVersion = false, UIKEY = "ptb-ui";
+  function busyNow() {
+    var a = document.activeElement;
+    return (timer.end && Date.now() < timer.end + 3000) || W.run || KP.isOpen() || document.body.classList.contains("kp-open") ||
+      (a && (a.tagName === "INPUT" || a.tagName === "TEXTAREA")) || Object.keys(drafts).length > 0 || Object.keys(inflight).some(function (k) { return inflight[k]; });
+  }
+  function maybeReload() {
+    if (!newVersion || busyNow()) return;
+    try { sessionStorage.setItem(UIKEY, JSON.stringify({ view: view, sel: sel, weekSel: weekSel, y: window.scrollY })); } catch (e) {}
+    location.reload();
+  }
+  function checkVersion() {
+    if (location.protocol === "file:") return;
+    fetch(location.pathname + "?v=" + Date.now(), { cache: "no-store" })
+      .then(function (r) { return r.ok ? r.text() : ""; })
+      .then(function (t) {
+        var m = t.match(/var APP_VERSION = "(\d+)/);
+        if (m && parseInt(m[1], 10) > parseInt(APP_VERSION, 10)) { newVersion = true; maybeReload(); }
+      })
+      .catch(function () {});
+  }
+  document.addEventListener("visibilitychange", function () {
+    if (document.visibilityState !== "visible") return;
+    if (newVersion) maybeReload(); else checkVersion();
+  });
+  var ui0 = null;
+  try { ui0 = JSON.parse(sessionStorage.getItem(UIKEY) || "null"); sessionStorage.removeItem(UIKEY); } catch (e) {}
+  if (ui0) {
+    if (VIEWS.indexOf(ui0.view) >= 0) { view = ui0.view; try { history.replaceState(null, "", "#" + view); } catch (e) {} }
+    sel = ui0.sel || null; if (ui0.weekSel) weekSel = ui0.weekSel;
+  }
+
   render();
   if (running) tickElapsed();
+  // Back to where they were after an update; again once the logs load and the page redraws.
+  if (ui0 && ui0.y) { window.scrollTo(0, ui0.y); setTimeout(function () { window.scrollTo(0, ui0.y); }, 900); }
 
   var slowTimer = setTimeout(function () { if (dbState === "loading") { dbState = "slow"; saveText = ""; updateSave(); } }, 10000);
   if (window.claude && typeof window.claude.use === "function") {
