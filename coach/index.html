@@ -270,7 +270,7 @@ body.kp-open .rest { bottom: var(--kph, 360px); z-index: 36; }
 <script>
 (function () {
   "use strict";
-  var VERSION = "10";
+  var VERSION = "11";
 
   // Sample program for ?demo, so anyone can try the app without a coach's sheet.
   var DEMO_DATA = {
@@ -1245,7 +1245,10 @@ body.kp-open .rest { bottom: var(--kph, 360px); z-index: 36; }
       // The last exercise rests between its sets, but not after its final set: the workout is over.
       var lastEx = it === s.items[s.items.length - 1];
       var finalSet = lastEx && (i === it.sets - 1 || v.ck.slice(0, it.sets).filter(Boolean).length >= it.sets);
-      if (startTimer && it.rest && !finalSet) startRest(it.rest, it.n);
+      // Every set checked (in any order) also counts as the end of the workout.
+      var allDone = s.items.every(function (x) { var c = (lg().items[x.key] || { ck: [] }).ck; for (var k = 0; k < x.sets; k++) if (!c[k]) return false; return true; });
+      if (finalSet || allDone) { stopRest(); return; }
+      if (startTimer && it.rest) startRest(it.rest, it.n);
     }
     for (var i = 0; i < it.sets; i++) (function (i) {
       var p = it.per[i];
