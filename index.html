@@ -326,6 +326,29 @@ input.w { width: 88px; } input.r { width: 64px; } input.s { width: 200px; max-wi
 .finish textarea { width: 100%; min-height: 80px; resize: vertical; font-family: var(--body); }
 .finbtn { width: 100%; min-height: 52px; border-radius: 12px; border: 2px solid var(--ok); background: transparent; color: var(--ok); font-weight: 700; font-size: 17px; cursor: pointer; }
 .finbtn[aria-pressed="true"] { background: var(--ok); color: #FFFFFF; }
+.donebadge { display: inline-flex; align-items: center; gap: 8px; align-self: flex-start; padding: 5px 12px 5px 8px; border-radius: 99px; background: var(--ok-soft); color: var(--ok); font-size: 13px; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; animation: pop .35s ease-out; }
+.donebadge svg { width: 18px; height: 18px; }
+@keyframes pop { 0% { transform: scale(.85); opacity: 0; } 70% { transform: scale(1.04); opacity: 1; } 100% { transform: scale(1); } }
+@media (prefers-reduced-motion: reduce) { .donebadge { animation: none; } }
+.sumstats { display: grid; grid-template-columns: repeat(3, 1fr); border-bottom: 1px solid var(--line); }
+.sumstats .sst { display: flex; flex-direction: column; gap: 2px; padding: 14px 12px 14px 16px; min-width: 0; }
+.sumstats .sst + .sst { border-left: 1px solid var(--line); }
+.sumstats .ssl { font-size: 11px; font-weight: 600; letter-spacing: .1em; text-transform: uppercase; color: var(--muted); }
+.sumstats .ssv { font-family: var(--display); font-weight: 800; font-size: 24px; line-height: 1.05; white-space: nowrap; }
+.sumnote { padding: 10px 16px 0; font-size: 14px; color: var(--muted); }
+.sumbest { margin: 12px 16px 0; padding: 10px 14px; border-radius: 12px; background: var(--accent-soft); display: flex; flex-direction: column; gap: 4px; }
+.sumbest .eyebrow { color: var(--accent); }
+.sbrow { display: flex; justify-content: space-between; gap: 12px; font-size: 14px; font-weight: 600; }
+.sbrow .mono { font-family: var(--mono); font-size: 12.5px; color: var(--accent); white-space: nowrap; }
+.sumlist { list-style: none; margin: 12px 0 0; padding: 0 16px; }
+.sumlist li { display: flex; justify-content: space-between; gap: 12px; padding: 9px 0; border-top: 1px solid var(--line); font-size: 14px; }
+.sumlist li:first-child { border-top: none; }
+.sumlist .n { font-weight: 600; }
+.sumlist .v { font-family: var(--mono); font-size: 12.5px; color: var(--muted); text-align: right; }
+.sumnotes { margin: 12px 16px 0; padding: 10px 12px; border-radius: 10px; background: var(--sunk); font-size: 14px; white-space: pre-wrap; }
+.sumact { padding: 16px; display: flex; flex-direction: column; gap: 12px; align-items: stretch; }
+.sumact .linkbtn { align-self: center; }
+.editbtn { width: 100%; min-height: 50px; border-radius: 12px; border: 1px solid var(--line); background: var(--sunk); color: var(--ink); font-weight: 700; font-size: 16px; cursor: pointer; }
 .empty { padding: 20px 16px; color: var(--muted); }
 
 /* Week */
@@ -517,16 +540,16 @@ input.w { width: 88px; } input.r { width: 64px; } input.s { width: 200px; max-wi
   var ONE_RM = Object.assign({}, ONE_RM_PLAN, recall("wr-1rm") || {});
   var TM = Object.assign({}, TM_PLAN, recall("wr-tm") || {});
   // Shown at the bottom of the Maxes tab; bump it with every update so it's easy to tell which version a phone has.
-  var APP_VERSION = "19 · Nov 18";
+  var APP_VERSION = "20 · Nov 19";
   var TM_NAMES = { squat: "Back squat", bench: "Bench press", trap: "Trap bar deadlift", press: "Strict press", clean: "Power clean" };
   var BARBELL = { squat: true, bench: true, press: true, clean: true };
 
   var WEEKS = [
     { n: 1, start: "2026-11-09", phase: "Base", intent: "Moderate loads. Leave about two reps in the tank on every set and dial in your working weights." },
-    { n: 2, start: "2026-11-16", phase: "Build", intent: "Heavier, fewer reps. You fly to SFO Thursday afternoon, so Friday and Saturday are the travel session in Napa." },
-    { n: 3, start: "2026-11-23", phase: "Build", intent: "Top of the build, in Tucson for Thanksgiving. Lifts Tuesday, Wednesday, Friday and Saturday at 9:00 AM Arizona time." },
+    { n: 2, start: "2026-11-16", phase: "Build", intent: "Heavier, fewer reps. Friday and Saturday are the travel session in Napa." },
+    { n: 3, start: "2026-11-23", phase: "Build", intent: "Top of the build, in Tucson. Lifts Tuesday, Wednesday, Friday and Saturday." },
     { n: 4, start: "2026-11-30", phase: "Test", test: true, intent: "Heavy singles on squat, bench and trap bar. Take a PR single only if 95% moves fast. These numbers set January's maxes." },
-    { n: 5, start: "2026-12-07", phase: "Taper", intent: "One light lift Monday, then you fly to Puerto Natales. The trek is your deload." }
+    { n: 5, start: "2026-12-07", phase: "Taper", intent: "One light lift Monday, then the trek is your deload." }
   ];
 
   var LIFT_META = {
@@ -568,7 +591,7 @@ input.w { width: 88px; } input.r { width: 64px; } input.s { width: 200px; max-wi
         { t: "D", name: "Finisher · 10 min", rest: "", items: [
           { k: "fin", n: "4 rounds", rx: "", note: "250 m Ski erg + 15 KB swings (53 lb). Rest 45 seconds between rounds.", log: "score", ph: "total time", timer: { type: "fortime", cap: 10, rounds: true } } ] } ] },
       { day: 1, warm: "3 min easy bike. Then 2 rounds: goblet squat × 8, empty-bar RDL × 10, band pull-apart × 15.",
-        note: "Tucson, 9:00 AM Arizona time.", blocks: [
+        blocks: [
         { t: "A", name: "Strength", rest: "Rest 3 min", items: [
           { k: "squat", n: "Back squat", main: "squat", sets: [[3,75],[3,80],[3,85],[3,85]], log: "top" } ] },
         { t: "B", name: "Superset × 3", rest: "Rest 90 sec after the pair", items: [
@@ -622,7 +645,7 @@ input.w { width: 88px; } input.r { width: 64px; } input.s { width: 200px; max-wi
         { t: "D", name: "Finisher · 8 min", rest: "", items: [
           { k: "fin", n: "4 rounds", rx: "", note: "40 sec hard Echo bike, 20 sec rest, 40 sec hollow rocks, 20 sec rest.", log: "score", ph: "total cals", timer: { type: "intervals", work: 40, rest: 20, rounds: 8, labels: ["Echo bike · hard", "Hollow rocks"] } } ] } ] },
       { day: 2, warm: "3 min easy Ski erg (or rower). Empty-bar clean complex × 5, twice (RDL, hang pull, front squat, press). Band pull-apart × 15.",
-        note: "Tucson, 9:00 AM Arizona time.", blocks: [
+        blocks: [
         { t: "A", name: "Power", rest: "Rest 2 min", items: [
           { k: "clean", n: "Power clean", main: "clean", sets: S(5,2,80), log: "top" } ] },
         { t: "B", name: "Superset × 4", rest: "Rest 2–2½ min after the pair", items: [
@@ -643,7 +666,7 @@ input.w { width: 88px; } input.r { width: 64px; } input.s { width: 200px; max-wi
           { k: "bbrow", n: "Barbell bent-over row", rx: "3 × 8", log: "load" } ] },
         { t: "D", name: "Core · 3 rounds", rest: "", items: [
           { k: "core", n: "Hanging leg raise + side plank", rx: "", note: "10 hanging leg raises, 30-second side plank each side." } ] } ] },
-      { off: "Travel day. You fly to Puerto Natales and land Thursday afternoon." }
+      { off: "Travel day." }
     ],
     3: [
       { blocks: [
@@ -660,8 +683,8 @@ input.w { width: 88px; } input.r { width: 64px; } input.s { width: 200px; max-wi
           { k: "sauna", n: "Sauna", rx: "15 min", note: "About 160°F. Water before and after." } ] } ] },
       { day: 3, warm: "3 min easy bike. Band pull-apart × 20, then go.", blocks: [
         { t: "A", name: "100 reps · superset 10 × 10", rest: "Rest 60 sec after each pair", items: [
-          { k: "hp", n: "DB low-incline press", rx: "10 × 10", note: "Try 65s (60s last week). Same weight all 10 sets; get all 100 reps.", log: "load" },
-          { k: "hpull", n: "Neutral-grip lat pulldown", rx: "10 × 10", note: "Try 145 (140 last week).", log: "load" } ] },
+          { k: "hp", n: "DB low-incline press", rx: "10 × 10", note: "Same weight all 10 sets; get all 100 reps.", log: "load" },
+          { k: "hpull", n: "Neutral-grip lat pulldown", rx: "10 × 10", log: "load" } ] },
         { t: "B", name: "Arms · superset × 3", rest: "Rest 45 sec", items: [
           { k: "curl", n: "EZ-bar cable curl", rx: "3 × 21s", note: "7 bottom half, 7 top half, 7 full.", log: "load" },
           { k: "tri", n: "Rope pushdown", rx: "3 × 15", log: "load" } ] },
@@ -671,7 +694,7 @@ input.w { width: 88px; } input.r { width: 64px; } input.s { width: 200px; max-wi
         { t: "D", name: "Recovery", rest: "", items: [
           { k: "sauna", n: "Sauna", rx: "15 min", note: "Skip it if you're short on time before class." } ] } ] },
       { warm: "5 min easy bike. Band pull-apart × 20, 10 push-ups, 10 band rows.",
-        note: "Tucson, 9:00 AM Arizona time. No Pilates this week, so do the full warm-up.", blocks: [
+        note: "No Pilates this week, so do the full warm-up.", blocks: [
         { t: "A", name: "100 reps · superset 10 × 10", rest: "Rest 60 sec after each pair", items: [
           { k: "hp", n: "Dips", rx: "10 × 10", note: "Bodyweight. Break sets up if you need to, but get 100.", log: "load" },
           { k: "hpull", n: "Seated cable row", rx: "10 × 10", log: "load" } ] },
@@ -711,16 +734,16 @@ input.w { width: 88px; } input.r { width: 64px; } input.s { width: 200px; max-wi
       { warm: "5 min easy elliptical. 2 rounds: hip airplane × 5 each side, light DB RDL × 10, walking lunge × 10.",
         note: "Napa hotel gym and a hill. No trap bar, so the hinge is dumbbell RDLs and the conditioning is hill sprints.", blocks: [
         { t: "A", name: "Strength", rest: "Rest 2 min", items: [
-          { k: "rdl", n: "DB Romanian deadlift", rx: "4 × 8", note: "Try 70s. 3-second lower, pause at the stretch. If 8 is easy, switch to single-leg RDL 4 × 8 each leg.", log: "load" } ] },
+          { k: "rdl", n: "DB Romanian deadlift", rx: "4 × 8", note: "3-second lower, pause at the stretch. If 8 is easy, switch to single-leg RDL 4 × 8 each leg.", log: "load" } ] },
         { t: "B", name: "Trek prep · superset × 3", rest: "Rest 60–90 sec", items: [
           { k: "stepup", n: "DB step-up onto bench", rx: "3 × 10 each leg", log: "load" },
-          { k: "farmer", n: "Farmer carry", rx: "3 × 40 yd", note: "70s.", log: "load" } ] },
+          { k: "farmer", n: "Farmer carry", rx: "3 × 40 yd", log: "load" } ] },
         { t: "C", name: "Core · superset × 3", rest: "Rest 45 sec", items: [
           { k: "tgu", n: "Turkish get-up", rx: "3 × 2 each side", note: "Light DB.", log: "load" },
           { k: "suit", n: "Cable Pallof press", rx: "3 × 10 each side" } ] },
         { t: "D", name: "Hill sprints · about 15 min", rest: "", items: [
           { k: "metcon", n: "8 hill sprints", rx: "", note: "15–20 sec hard uphill, walk back down (about 70 sec). Then 5 min easy elliptical. Sauna after if you have time.", log: "score", ph: "sprints done", timer: { type: "intervals", work: 20, rest: 70, rounds: 8, labels: ["Sprint uphill"], restLabel: "Walk down" } } ] } ] },
-      { note: "Tucson, 9:00 AM Arizona time.", blocks: [
+      { blocks: [
         { t: "A", name: "Strength", rest: "Rest 2½ min", items: [
           { k: "trap", n: "Trap bar deadlift", main: "trap", sets: [[3,70],[3,75],[3,80],[3,80]], note: "Napa took last Saturday, so this tops out at 80%.", log: "top" } ] },
         { t: "B", name: "Trek prep · superset × 3", rest: "Rest 60–90 sec", items: [
@@ -813,24 +836,22 @@ input.w { width: 88px; } input.r { width: 64px; } input.s { width: 200px; max-wi
     var tn = Object.assign({}, TENNIS_DEFAULT, TENNIS[w] || {});
     if (!tn.skip) d[tn.day].push({ kind: "class", name: tn.booked ? "Tennis clinic · booked" : "Tennis clinic", tm: tn.tm, where: "Wharton Tennis Club", booked: !!tn.booked });
     if (w === 2) {
-      d[3].push({ kind: "note", name: "Fly to SFO at 4:05 PM" });
       d[4] = [{ kind: "travel", name: "Napa", note: "A long hike counts" }, { kind: "lift", lift: 3 }];
       d[5] = [{ kind: "travel", name: "Napa" }, { kind: "lift", lift: 4 }];
       d[6] = [{ kind: "travel", name: "Napa", note: "Off" }];
     }
     if (w === 3) {
       // Napa through Monday, then Tucson with a full gym. No Fitler classes or tennis.
-      d[0] = [{ kind: "travel", name: "Napa", note: "Fly to Tucson, 3:10 PM PT" }, { kind: "lift", lift: 1 }];
+      d[0] = [{ kind: "travel", name: "Napa" }, { kind: "lift", lift: 1 }];
       d[1] = [{ kind: "travel", name: "Tucson" }];
       d[2] = [{ kind: "travel", name: "Tucson" }];
-      d[3] = [{ kind: "travel", name: "Tucson" }, { kind: "note", name: "Thanksgiving" }, { kind: "lift", lift: 2 }];
+      d[3] = [{ kind: "travel", name: "Tucson" }, { kind: "lift", lift: 2 }];
       d[4] = [{ kind: "travel", name: "Tucson" }, { kind: "lift", lift: 3 }];
       d[5] = [{ kind: "travel", name: "Tucson" }, { kind: "lift", lift: 4 }];
       d[6] = [{ kind: "travel", name: "Tucson", note: "Off" }];
     }
     if (w === 5) {
-      if (d[2][0]) d[2][0].note = "If you're still in town";
-      d[3] = [{ kind: "travel", name: "Fly to Puerto Natales", note: "Land by 3:30 PM" }];
+      d[3] = [{ kind: "travel", name: "Puerto Natales" }];
       d[4] = [{ kind: "travel", name: "O Circuit trek" }];
       d[5] = [{ kind: "travel", name: "O Circuit trek" }];
       d[6] = [{ kind: "travel", name: "O Circuit trek" }];
@@ -934,11 +955,13 @@ input.w { width: 88px; } input.r { width: 64px; } input.s { width: 200px; max-wi
       var ws = [], rs = [];
       v.sets.forEach(function (w, i) { if (w == null) return; ws.push(w); rs.push(v.reps && v.reps[i] != null ? v.reps[i] : plannedReps(it, i)); });
       var reps = sameAll(rs) ? (rs[0] != null ? rs[0] : "?") : rs.map(function (x) { return x == null ? "?" : x; }).join(", ");
+      if (ws.every(function (x) { return !x; })) return ws.length + " × " + reps + miss;
       return ws.length + " × " + reps + " @ " + (sameAll(ws) ? ws[0] : ws.join(", ")) + " lb" + miss;
     }
     if (v.w == null) return null;
     if (it.log === "top") return "Top set " + v.w + (v.r != null ? " × " + v.r : "") + " lb" + miss;
     var m = (it.rx || "").match(/^(\d+)\s*×\s*(.+)$/);
+    if (!v.w) return (it.rx || "Bodyweight") + miss;
     return (m ? m[1] + " × " + m[2] + " @ " : "") + v.w + " lb" + miss;
   }
   // Every logged session of an exercise (variants like "Slow strict chin-up" and "Weighted chin-up" count together), newest first.
@@ -1304,6 +1327,7 @@ input.w { width: 88px; } input.r { width: 64px; } input.s { width: 200px; max-wi
       return card;
     }
     var isTravel = s && s.travel;
+    if (currentLog(id).done && !editing[id]) return renderSummary(card, head, s, id, isTravel ? TRAVEL.title : meta.title);
     head.appendChild(el("h2", null, isTravel ? TRAVEL.title : meta.title));
     if (isTravel) head.appendChild(el("p", "meta", "Away from Fitler · " + TRAVEL.dur));
     if (!ex) head.appendChild(moveBox(pick));
@@ -1340,18 +1364,138 @@ input.w { width: 88px; } input.r { width: 64px; } input.s { width: 200px; max-wi
     ta.addEventListener("input", function () { editLog(id, function (dd) { dd.notes = ta.value; }); });
     fin.appendChild(ta);
     var done = !!currentLog(id).done;
-    var fb = el("button", "finbtn", done ? "Session done ✓" : "Finish session");
+    var fb = el("button", "finbtn", done ? "Done editing" : "Finish session");
     fb.type = "button"; fb.id = "done-" + id;
-    fb.setAttribute("aria-pressed", String(done));
     fb.addEventListener("click", function () {
-      var next = !currentLog(id).done;
-      editLog(id, function (dd) { dd.done = next; dd.doneAt = next ? new Date().toISOString() : null; if (next && running && running.id === id) dd.minutes = Math.round((Date.now() - running.start) / 60000); }, true);
-      fb.setAttribute("aria-pressed", String(next));
-      fb.textContent = next ? "Session done ✓" : "Finish session";
-      if (next && running && running.id === id) endSession();
+      if (currentLog(id).done) { editing[id] = false; render(); scrollToSession(); return; }
+      finishSession(id);
     });
     fin.appendChild(fb);
     card.appendChild(fin);
+    return card;
+  }
+
+  // ---------- Finishing a session ----------
+  var editing = {};
+  function scrollToSession() {
+    var c = document.getElementById("session");
+    if (c) window.scrollTo(0, Math.max(0, c.getBoundingClientRect().top + window.scrollY - 70)); else window.scrollTo(0, 0);
+  }
+  function finishSession(id) {
+    var now = Date.now(), lg = currentLog(id), mins = null;
+    if (running && running.id === id) mins = (now - running.start) / 60000;
+    else if (lg.startedAt) mins = (now - Date.parse(lg.startedAt)) / 60000;
+    if (mins != null) mins = Math.max(1, Math.min(240, Math.round(mins)));
+    editLog(id, function (d) { d.done = true; d.doneAt = new Date(now).toISOString(); if (mins != null) d.minutes = mins; }, true);
+    if (running && running.id === id) endSession();
+    editing[id] = false;
+    if (navigator.vibrate) try { navigator.vibrate(40); } catch (e) {}
+    render(); scrollToSession();
+  }
+  function resumeSession(id) {
+    var mins = currentLog(id).minutes;
+    editLog(id, function (d) { d.done = false; d.doneAt = null; }, true);
+    editing[id] = false;
+    unlockAudio();
+    running = { id: id, start: Date.now() - (mins || 0) * 60000 };
+    store("ptb-running", running);
+    requestWake();
+    render(); tickElapsed(); scrollToSession();
+  }
+  // Heaviest checked weight for a lift in sessions finished before this one.
+  function prevTop(name, id) {
+    var key = normName(name), before = currentLog(id).doneAt || "9999", best = null;
+    Object.keys(logs).forEach(function (oid) {
+      if (oid === id) return;
+      var s2 = sessDef(oid), lg = logs[oid];
+      if (!s2 || !s2.blocks || !lg || (lg.doneAt && lg.doneAt > before)) return;
+      s2.blocks.forEach(function (b) { b.items.forEach(function (it) {
+        if (normName(it.n) !== key) return;
+        var v = (lg.items || {})[it.k] || {}, ck = (lg.checks || {})[it.k] || [];
+        for (var i = 0; i < ck.length; i++) if (ck[i]) {
+          var wt = Array.isArray(v.sets) ? v.sets[i] : v.w;
+          if (wt != null && (best == null || wt > best)) best = wt;
+        }
+      }); });
+    });
+    return best;
+  }
+  function sessionStats(s, id) {
+    var lg = currentLog(id), out = { sets: 0, vol: 0, lines: [], skipped: [], best: [] };
+    s.blocks.forEach(function (b) { b.items.forEach(function (it) {
+      var v = (lg.items || {})[it.k] || {}, ck = (lg.checks || {})[it.k] || [];
+      if (it.log === "score") { if (v.s != null && String(v.s).trim()) out.lines.push({ n: it.n, txt: String(v.s).trim() }); return; }
+      var n = ck.filter(Boolean).length, total = roundsOf(it, b);
+      if (!n) { out.skipped.push(it.n); return; }
+      out.sets += n;
+      var timed = /yd|sec|min|\bm\b|cal/i.test(it.rx || ""), top = null;
+      for (var i = 0; i < ck.length; i++) {
+        if (!ck[i]) continue;
+        var wt = Array.isArray(v.sets) ? v.sets[i] : v.w;
+        var rp = v.reps && v.reps[i] != null ? v.reps[i] : plannedReps(it, i);
+        if (wt != null && wt > 0) { if (top == null || wt > top) top = wt; if (!timed && rp) out.vol += wt * rp; }
+      }
+      var t = (it.log === "load" || it.log === "top") ? histText(it, lg) : null;
+      out.lines.push({ n: it.n, txt: t || (n >= total ? (it.rx || "Done") : n + " of " + total + " sets") });
+      if (top != null && perSet(it)) {
+        var prev = prevTop(it.n, id);
+        if (prev != null && top > prev) out.best.push({ n: it.n, txt: top + " lb, up from " + prev });
+      }
+    }); });
+    return out;
+  }
+  function volumeLine(v) {
+    var eq = [[13000, "an elephant", "elephants"], [4000, "a car", "cars"], [1000, "a grand piano", "grand pianos"]];
+    for (var i = 0; i < eq.length; i++) {
+      if (v < eq[i][0]) continue;
+      var n = Math.round(v / eq[i][0]);
+      return "That's about " + (n === 1 ? eq[i][1] : n + " " + eq[i][2]) + ".";
+    }
+    return "";
+  }
+  var DONE_LINES = [
+    "Logged. Go eat something with protein in it.",
+    "That's one more in the books. Hydrate.",
+    "Done. Your future self on the trail says thanks.",
+    "Walking normally is optional for the next hour.",
+    "Nice work. The sauna is calling.",
+    "Another one down. The program is working because you are."
+  ];
+  function renderSummary(card, head, s, id, title) {
+    var lg = currentLog(id), st = sessionStats(s, id);
+    card.classList.add("summary");
+    var badge = el("div", "donebadge");
+    badge.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5 10 17 19 7"/></svg>';
+    badge.appendChild(document.createTextNode("Workout complete"));
+    head.appendChild(badge);
+    head.appendChild(el("h2", null, title));
+    head.appendChild(el("p", "meta", DONE_LINES[(dayNum() + id.length) % DONE_LINES.length]));
+    card.appendChild(head);
+    var stats = el("div", "sumstats");
+    [["Time", lg.minutes != null ? lg.minutes + " min" : "—"], ["Sets", String(st.sets)], ["Volume", st.vol ? Math.round(st.vol).toLocaleString("en-US") + " lb" : "—"]].forEach(function (x) {
+      var t = el("div", "sst"); t.appendChild(el("span", "ssl", x[0])); t.appendChild(el("span", "ssv", x[1])); stats.appendChild(t);
+    });
+    card.appendChild(stats);
+    var vl = st.vol ? volumeLine(st.vol) : "";
+    if (vl) card.appendChild(el("p", "sumnote", vl));
+    if (st.best.length) {
+      var hi = el("div", "sumbest");
+      hi.appendChild(el("div", "eyebrow", "Heaviest yet"));
+      st.best.forEach(function (b) { var r = el("div", "sbrow"); r.appendChild(el("span", null, b.n)); r.appendChild(el("span", "mono", b.txt)); hi.appendChild(r); });
+      card.appendChild(hi);
+    }
+    var list = el("ul", "sumlist");
+    st.lines.forEach(function (x) { var li = el("li"); li.appendChild(el("span", "n", x.n)); li.appendChild(el("span", "v", x.txt)); list.appendChild(li); });
+    card.appendChild(list);
+    if (st.skipped.length) card.appendChild(el("p", "sumnote", "Skipped: " + st.skipped.join(", ")));
+    if (lg.notes && String(lg.notes).trim()) card.appendChild(el("p", "sumnotes", String(lg.notes).trim()));
+    var act = el("div", "sumact");
+    var eb = el("button", "editbtn", "Edit workout"); eb.type = "button";
+    eb.addEventListener("click", function () { editing[id] = true; render(); scrollToSession(); });
+    var rb = el("button", "linkbtn", "Finished by mistake? Resume workout"); rb.type = "button";
+    rb.addEventListener("click", function () { resumeSession(id); });
+    act.appendChild(eb); act.appendChild(rb);
+    card.appendChild(act);
     return card;
   }
 
@@ -1405,7 +1549,7 @@ input.w { width: 88px; } input.r { width: 64px; } input.s { width: 200px; max-wi
     unlockAudio();
     var arr = checksOf(id, key, len);
     arr[i] = !arr[i];
-    editLog(id, function (d) { d.checks = d.checks || {}; d.checks[key] = arr; });
+    editLog(id, function (d) { d.checks = d.checks || {}; d.checks[key] = arr; if (arr[i] && !d.startedAt) d.startedAt = new Date().toISOString(); });
     btn.setAttribute("aria-pressed", String(arr[i]));
     var itemEl = btn.closest && btn.closest(".item");
     if (itemEl) itemEl.classList.toggle("ck", arr.some(Boolean));
@@ -1414,6 +1558,20 @@ input.w { width: 88px; } input.r { width: 64px; } input.s { width: 200px; max-wi
       var rs = parseRest(b.rest);
       if (rs && (b.items.length === 1 || idx === b.items.length - 1)) startTimer(rs, b.name);
     }
+  }
+
+  // "Last ▾  10 × 10 @ 60 lb" under a single-weight exercise; tap it for every session.
+  function lastLine(it, id) {
+    var past = liftHistory(it.n, id);
+    if (!past.length) return null;
+    var card = el("div", "lastcard");
+    var hb = el("button", "lr lrbtn"); hb.type = "button"; hb.setAttribute("aria-expanded", "false");
+    var l = el("span", null, "Last"); l.appendChild(el("span", "chev", "▾"));
+    hb.appendChild(l); hb.appendChild(el("span", "lv", past[0].txt));
+    var hl = histList(past, it.n); hl.hidden = true;
+    hb.addEventListener("click", function () { hl.hidden = !hl.hidden; hb.setAttribute("aria-expanded", String(!hl.hidden)); });
+    card.appendChild(hb); card.appendChild(hl);
+    return card;
   }
 
   function renderItem(it, idx, b, id) {
@@ -1459,7 +1617,10 @@ input.w { width: 88px; } input.r { width: 64px; } input.s { width: 200px; max-wi
       }
     }
     var lr = null;
-    if (it.log && !(perSet(it) && (it.log === "top" || it.log === "load"))) { lr = logRow(it, id); box.appendChild(lr); }
+    if (it.log && !(perSet(it) && (it.log === "top" || it.log === "load"))) {
+      lr = logRow(it, id); box.appendChild(lr);
+      if (it.log === "load" || it.log === "top") { var lc = lastLine(it, id); if (lc) box.appendChild(lc); }
+    }
     if (it.timer) box.appendChild(timerButton(it, b, function () { return lr && lr.querySelector("input"); }));
     // Checking off a set of a single-weight exercise saves the suggested weight if nothing was typed.
     function fillDefault() {
@@ -1504,6 +1665,8 @@ input.w { width: 88px; } input.r { width: 64px; } input.s { width: 200px; max-wi
     r2.appendChild(el("span", "lv", lt));
     var past = liftHistory(it.n, id);
     if (past.length) {
+      lt = past[0].txt;
+      r2.lastChild.textContent = lt;
       // Tap "Last" to see every logged session of this lift.
       var hb = el("button", "lr lrbtn"); hb.type = "button"; hb.setAttribute("aria-expanded", "false");
       while (r2.firstChild) hb.appendChild(r2.firstChild);
@@ -1625,7 +1788,7 @@ input.w { width: 88px; } input.r { width: 64px; } input.s { width: 200px; max-wi
       var ch = false;
       for (var j = 0; j < n; j++) { ch = fill(j) || ch; }
       var ck = checksOf(id, it.k, n).map(function () { return true; });
-      editLog(id, function (d) { d.checks = d.checks || {}; d.checks[it.k] = ck; });
+      editLog(id, function (d) { d.checks = d.checks || {}; d.checks[it.k] = ck; if (ck.some(Boolean) && !d.startedAt) d.startedAt = new Date().toISOString(); });
       C.forEach(function (c) { c.setAttribute("aria-pressed", "true"); });
       if (ch) save(); else drawSum();
     });
@@ -1682,7 +1845,7 @@ input.w { width: 88px; } input.r { width: 64px; } input.s { width: 200px; max-wi
       v.setAttribute("aria-label", it.n + " weight in pounds");
       if (cur.w != null) v.value = cur.w;
       v.addEventListener("input", function () { editLog(id, function (d) { d.items = d.items || {}; d.items[it.k] = { w: numOrNull(v.value) }; }); });
-      l2.appendChild(v); l2.appendChild(document.createTextNode(tgt != null ? "lb · target" + (prev && prev.w != null && prev.w !== tgt ? " (last " + prev.w + ")" : "") : (prev && prev.w != null ? "lb · last time" : "lb")));
+      l2.appendChild(v); l2.appendChild(document.createTextNode("lb"));
       row.appendChild(l2);
     } else if (it.log === "score") {
       var l3 = el("label", null, "Score ");
@@ -2361,11 +2524,6 @@ input.w { width: 88px; } input.r { width: 64px; } input.s { width: 200px; max-wi
           notes.appendChild(use);
         }
       }
-      if (TM[k] !== TM_PLAN[k]) {
-        var rs = el("button", "linkbtn tmreset", "Plan was " + TM_PLAN[k] + " · reset"); rs.type = "button";
-        rs.addEventListener("click", function () { setMax(k, TM_PLAN[k], ONE_RM_PLAN[k]); });
-        notes.appendChild(rs);
-      }
       if (notes.childNodes.length) card.appendChild(notes);
     });
     viewEl.appendChild(card);
@@ -2470,6 +2628,7 @@ input.w { width: 88px; } input.r { width: 64px; } input.s { width: 200px; max-wi
     var cur = logs[id] || {}, items = cur.items || {}, checks = cur.checks || {};
     var card = document.getElementById("session");
     if (!card) return;
+    if (card.classList.contains("summary") !== (!!cur.done && !editing[id])) { render(); return; }
     Array.prototype.forEach.call(card.querySelectorAll("input[data-k]"), function (inp) {
       if (inp === document.activeElement) return;
       var it = items[inp.getAttribute("data-k")] || {}, f = inp.getAttribute("data-f");
@@ -2483,7 +2642,7 @@ input.w { width: 88px; } input.r { width: 64px; } input.s { width: 200px; max-wi
     var ta = document.getElementById("notes-" + id);
     if (ta && ta !== document.activeElement) ta.value = cur.notes || "";
     var fb = document.getElementById("done-" + id);
-    if (fb) { fb.setAttribute("aria-pressed", String(!!cur.done)); fb.textContent = cur.done ? "Session done ✓" : "Finish session"; }
+    if (fb) fb.textContent = cur.done ? "Done editing" : "Finish session";
   }
 
   // ---------- Sheet rows (used by the sync below) ----------
