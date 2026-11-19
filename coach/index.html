@@ -270,7 +270,7 @@ body.kp-open .rest { bottom: var(--kph, 360px); z-index: 36; }
 <script>
 (function () {
   "use strict";
-  var VERSION = "6";
+  var VERSION = "7";
 
   // Sample program for ?demo, so anyone can try the app without a coach's sheet.
   var DEMO_DATA = {
@@ -1028,8 +1028,8 @@ body.kp-open .rest { bottom: var(--kph, 360px); z-index: 36; }
   function resetSession(s) {
     var old = logOf(s.id);
     stopRest(); KP.close();
-    // Back to To do: no sets, no time, not started. Notes and a moved day stay.
-    var lg = logs[s.id] = { items: {}, notes: old.notes || "", status: "", cleared: true };
+    // Back to To do: no sets, no time, no notes, not started. A moved day stays.
+    var lg = logs[s.id] = { items: {}, notes: "", status: "", cleared: true };
     if ("moved" in old) lg.moved = old.moved;
     save(LKEY, logs); queueSync(s.id, true);
     editing[s.id] = false; render(); window.scrollTo(0, 0);
@@ -1234,7 +1234,8 @@ body.kp-open .rest { bottom: var(--kph, 360px); z-index: 36; }
     }
     function changed(startTimer, i) {
       save(LKEY, logs); queueSync(s.id);
-      if (startTimer && it.rest) startRest(it.rest, it.n);
+      // No rest timer on the workout's last exercise: nothing comes after it.
+      if (startTimer && it.rest && it !== s.items[s.items.length - 1]) startRest(it.rest, it.n);
     }
     for (var i = 0; i < it.sets; i++) (function (i) {
       var p = it.per[i];
