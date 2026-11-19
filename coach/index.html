@@ -270,7 +270,7 @@ body.kp-open .rest { bottom: var(--kph, 360px); z-index: 36; }
 <script>
 (function () {
   "use strict";
-  var VERSION = "9";
+  var VERSION = "10";
 
   // Sample program for ?demo, so anyone can try the app without a coach's sheet.
   var DEMO_DATA = {
@@ -844,11 +844,13 @@ body.kp-open .rest { bottom: var(--kph, 360px); z-index: 36; }
     return c;
   }
   // Pick a day for a workout that isn't started yet: the week ahead, from today.
+  // A finished workout (in Edit) moves to the day it was really done: the past week, up to today.
   function moveBox(s) {
-    var cur = dateOf(s.id), pl = plannedOf(s.id), t = parseISO(isoDay());
-    var from = cur && parseISO(cur) > addDays(t, 6) ? addDays(parseISO(cur), -3) : t;
+    var done = isDone(s.id) || isStarted(s.id);
+    var cur = done ? (logOf(s.id).date || isoDay()) : dateOf(s.id), pl = plannedOf(s.id), t = parseISO(isoDay());
+    var from = done ? addDays(t, -6) : cur && parseISO(cur) > addDays(t, 6) ? addDays(parseISO(cur), -3) : t;
     var box = el("div", "move");
-    var moved = cur && cur !== pl;
+    var moved = !done && cur && pl && cur !== pl;
     var lb = el("button", "linkbtn", moved ? "Moved from " + fmtDay(pl) + " · change" : "Move to another day");
     lb.type = "button"; lb.setAttribute("aria-expanded", "false");
     var row = el("div", "mvdays"); row.hidden = true;
@@ -858,7 +860,12 @@ body.kp-open .rest { bottom: var(--kph, 360px); z-index: 36; }
       b.appendChild(el("span", null, iso === isoDay() ? "Today" : d.toLocaleDateString("en-US", { weekday: "short" })));
       b.appendChild(el("small", null, String(d.getDate())));
       if (iso === pl) b.title = "Planned day";
-      b.addEventListener("click", function () { moveTo(s, iso); render(); });
+      b.addEventListener("click", function () {
+        // Keep this workout on screen even if it no longer belongs on Today.
+        if (done) { logOf(s.id).date = iso; save(LKEY, logs); queueSync(s.id, true); sel = s.id; }
+        else moveTo(s, iso);
+        render();
+      });
       row.appendChild(b);
     })(addDays(from, i));
     lb.addEventListener("click", function () { row.hidden = !row.hidden; lb.setAttribute("aria-expanded", String(!row.hidden)); });
@@ -1143,7 +1150,7 @@ body.kp-open .rest { bottom: var(--kph, 360px); z-index: 36; }
     head.appendChild(el("div", "eyebrow", when + sessLabel(s) + (isDone(s.id) ? " · Done" : isMissed(s.id) ? " · Missed" : "")));
     head.appendChild(el("h2", null, s.title));
     if (!isDone(s.id)) head.appendChild(runBox(s));
-    if (plan().on && !isDone(s.id) && !isStarted(s.id)) head.appendChild(moveBox(s));
+    if (editing[s.id] || (plan().on && !isDone(s.id) && !isStarted(s.id))) head.appendChild(moveBox(s));
     viewEl.appendChild(head);
     s.items.forEach(function (it) { viewEl.appendChild(renderItem(s, it)); });
 
