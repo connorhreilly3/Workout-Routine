@@ -193,7 +193,7 @@ details.lh .hist { padding-bottom: 12px; }
 <script>
 (function () {
   "use strict";
-  var VERSION = "2";
+  var VERSION = "3";
 
   // Sample program for ?demo, so anyone can try the app without a coach's sheet.
   var DEMO_DATA = {
@@ -442,7 +442,7 @@ details.lh .hist { padding-bottom: 12px; }
     ids.forEach(function (id) { sent[id] = queue[id]; });
     setSync("saving");
     fetch(API, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" },
-      body: JSON.stringify({ c: cfg.c, sessions: ids.map(function (id) { return { id: id, rows: rowsFor(id) }; }) }) })
+      body: JSON.stringify({ client: cfg.c, sessions: ids.map(function (id) { return { id: id, rows: rowsFor(id) }; }) }) })
       .then(function (r) { return r.json(); })
       .then(function (res) {
         if (res && res.ok) {
@@ -464,7 +464,8 @@ details.lh .hist { padding-bottom: 12px; }
   }
   function refresh() {
     if (DEMO || !API || !cfg.c) return;
-    fetch(API + "?c=" + encodeURIComponent(cfg.c))
+    // Google reserves "c" and "sid" on script addresses, so the code goes as "client".
+    fetch(API + "?client=" + encodeURIComponent(cfg.c))
       .then(function (r) { return r.json(); })
       .then(function (res) {
         if (!res || !res.ok) {
