@@ -573,7 +573,7 @@ input.w { width: 88px; } input.r { width: 64px; } input.s { width: 200px; max-wi
   var ONE_RM = Object.assign({}, ONE_RM_PLAN, recall("wr-1rm") || {});
   var TM = Object.assign({}, TM_PLAN, recall("wr-tm") || {});
   // Shown at the bottom of the Maxes tab; bump it with every update so it's easy to tell which version a phone has.
-  var APP_VERSION = "28 · Nov 19";
+  var APP_VERSION = "29 · Nov 20";
   var TM_NAMES = { squat: "Back squat", bench: "Bench press", trap: "Trap bar deadlift", press: "Strict press", clean: "Power clean" };
   var BARBELL = { squat: true, bench: true, press: true, clean: true };
 
@@ -1060,7 +1060,8 @@ input.w { width: 88px; } input.r { width: 64px; } input.s { width: 200px; max-wi
   function short(dt) { return dt.toLocaleDateString("en-US", { month: "short", day: "numeric", timeZone: "UTC" }); }
   function longDay(dt) { return dt.toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric", timeZone: "UTC" }); }
   function todayET() {
-    try { return new Intl.DateTimeFormat("en-CA", { timeZone: "America/New_York", year: "numeric", month: "2-digit", day: "2-digit" }).format(new Date()); }
+    // The phone's own time zone, so "today" follows you when you travel.
+    try { return new Intl.DateTimeFormat("en-CA", { year: "numeric", month: "2-digit", day: "2-digit" }).format(new Date()); }
     catch (e) { return iso(new Date()); }
   }
   function load(lift, pct) { return Math.round(TM[lift] * pct / 100 / 5) * 5; }
@@ -1210,7 +1211,7 @@ input.w { width: 88px; } input.r { width: 64px; } input.s { width: 200px; max-wi
     var ps = SESS[l] && SESS[l][w - 1];
     return ps && ps.day != null ? ps.day : LIFT_META[l].day;
   }
-  function etDate(ts) { try { return new Intl.DateTimeFormat("en-CA", { timeZone: "America/New_York", year: "numeric", month: "2-digit", day: "2-digit" }).format(new Date(ts)); } catch (e) { return String(ts).slice(0, 10); } }
+  function etDate(ts) { try { return new Intl.DateTimeFormat("en-CA", { year: "numeric", month: "2-digit", day: "2-digit" }).format(new Date(ts)); } catch (e) { return String(ts).slice(0, 10); } }
   function liftDate(w, l) { return addDays(parseISO(WEEKS[w - 1].start), liftDayIdx(w, l)); }
   function parseRest(str) {
     if (!str) return 0;
@@ -3004,7 +3005,7 @@ input.w { width: 88px; } input.r { width: 64px; } input.s { width: 200px; max-wi
       (a && (a.tagName === "INPUT" || a.tagName === "TEXTAREA")) || Object.keys(drafts).length > 0 || Object.keys(inflight).some(function (k) { return inflight[k]; });
   }
   function maybeReload() {
-    if (!newVersion || busyNow()) return;
+    if (!(newVersion || todayET() !== today) || busyNow()) return;
     try { sessionStorage.setItem(UIKEY, JSON.stringify({ view: view, sel: sel, weekSel: weekSel, y: window.scrollY })); } catch (e) {}
     location.reload();
   }
@@ -3020,7 +3021,8 @@ input.w { width: 88px; } input.r { width: 64px; } input.s { width: 200px; max-wi
   }
   document.addEventListener("visibilitychange", function () {
     if (document.visibilityState !== "visible") return;
-    if (newVersion) maybeReload(); else checkVersion();
+    // A new version, or a new day since the app was opened, reloads it.
+    if (newVersion || todayET() !== today) maybeReload(); else checkVersion();
   });
   var saved = recall(PROG_KEY) || window.STARTER_PROGRAM;
   // The sheet's weeks can differ from the built-in ones, so pick this week again with them.
