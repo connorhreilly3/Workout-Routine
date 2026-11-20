@@ -24,7 +24,7 @@ window.APP_SETTINGS = {
   weighInNote: "Same scale, same morning.",
   // Training maxes in lb for back squat, bench press, trap bar deadlift, strict press and power clean:
   // about 90% of a 1-rep max you could hit today. Every % load in the program uses these.
-  // Edits on the app's Maxes tab are saved on the phone and win. oneRepMax is for reference.
+  // These are starting values: once your Sheet is connected, its Maxes tab holds them. oneRepMax is for reference.
   trainingMax: { squat: 225, bench: 185, trap: 315, press: 115, clean: 135 },
   oneRepMax: { squat: 250, bench: 205, trap: 350, press: 130, clean: 150 }
 };
@@ -577,7 +577,7 @@ input.w { width: 88px; } input.r { width: 64px; } input.s { width: 200px; max-wi
   var ONE_RM = Object.assign({}, ONE_RM_PLAN, recall("wr-1rm") || {});
   var TM = Object.assign({}, TM_PLAN, recall("wr-tm") || {});
   // Shown at the bottom of the Maxes tab; bump it with every update so it's easy to tell which version a phone has.
-  var APP_VERSION = "29 · Nov 20";
+  var APP_VERSION = "30 · Nov 20";
   var TM_NAMES = { squat: "Back squat", bench: "Bench press", trap: "Trap bar deadlift", press: "Strict press", clean: "Power clean" };
   var BARBELL = { squat: true, bench: true, press: true, clean: true };
 
@@ -2752,7 +2752,7 @@ input.w { width: 88px; } input.r { width: 64px; } input.s { width: 200px; max-wi
     var pad = el("div", "pad");
     pad.appendChild(el("h3", null, "Training maxes"));
     var tw = WEEKS.filter(function (x) { return x.test; })[0];
-    pad.appendChild(el("p", "muted", "Loads use 90% of your 1-rep maxes, the PPSA \"everyday max\": a weight you can hit on a bad day." + (tw ? " Retested in week " + tw.n + "." : "") + " Tap a training max to change it; every planned weight follows."));
+    pad.appendChild(el("p", "muted", "Loads use 90% of your 1-rep maxes, the PPSA \"everyday max\": a weight you can hit on a bad day." + (tw ? " Retested in week " + tw.n + "." : "") + " Tap a training max to change it; every planned weight follows." + (SETTINGS.syncUrl ? " They're kept on the Maxes tab of your Google Sheet." : "")));
     card.appendChild(pad);
     var hdr = el("div", "tmrow");
     hdr.appendChild(el("span", "eyebrow", "Lift")); hdr.appendChild(el("span", "eyebrow", "1RM")); hdr.appendChild(el("span", "eyebrow", "Training max"));
@@ -2810,7 +2810,34 @@ input.w { width: 88px; } input.r { width: 64px; } input.s { width: 200px; max-wi
       ONE_RM[k] = oneRm;
       var r = {}; Object.keys(ONE_RM).forEach(function (x) { if (ONE_RM[x] !== ONE_RM_PLAN[x]) r[x] = ONE_RM[x]; }); store("wr-1rm", Object.keys(r).length ? r : null);
     }
+    if (window.WRSync) window.WRSync.mark("maxes", "all");
     render();
+  }
+  function storeMaxes() {
+    var o = {}; Object.keys(TM).forEach(function (x) { if (TM[x] !== TM_PLAN[x]) o[x] = TM[x]; }); store("wr-tm", Object.keys(o).length ? o : null);
+    var r = {}; Object.keys(ONE_RM).forEach(function (x) { if (ONE_RM[x] !== ONE_RM_PLAN[x]) r[x] = ONE_RM[x]; }); store("wr-1rm", Object.keys(r).length ? r : null);
+  }
+  // Training maxes for the Sheet's Maxes tab.
+  function maxesOut() {
+    return Object.keys(TM).map(function (k) { return { id: k, name: TM_NAMES[k], oneRm: ONE_RM[k], tm: TM[k] }; });
+  }
+  // From the sync: the Sheet's Maxes tab, which wins over this phone. Returns false when the tab has no maxes yet.
+  function receiveMaxes(rows) {
+    if (!rows || rows.length < 2) return false;
+    var h = rows[0].map(function (x) { return String(x).trim().toLowerCase(); });
+    var ci = h.indexOf("id"), ct = h.indexOf("training max"), co = h.indexOf("1rm");
+    if (ci < 0 || ct < 0) return false;
+    var num = function (v) { var n = parseFloat(String(v).replace(/[^0-9.]/g, "")); return isFinite(n) && n > 0 ? n : null; };
+    var any = false, changed = false;
+    rows.slice(1).forEach(function (r) {
+      var k = String(r[ci] || "").trim().toLowerCase();
+      if (!(k in TM)) return;
+      var tm = num(r[ct]), one = co >= 0 ? num(r[co]) : null;
+      if (tm != null) { any = true; if (TM[k] !== tm) { TM[k] = tm; changed = true; } }
+      if (one != null && ONE_RM[k] !== one) { ONE_RM[k] = one; changed = true; }
+    });
+    if (changed) { storeMaxes(); if (!busyNow()) { var y = window.scrollY; render(); window.scrollTo(0, y); } }
+    return any;
   }
   // Heaviest completed single per lift from the week 4 test blocks (the ones with a PR attempt).
   function testedBests() {
@@ -2996,7 +3023,7 @@ input.w { width: 88px; } input.r { width: 64px; } input.s { width: 200px; max-wi
     lg.updatedAt = up && !isNaN(up) ? up.toISOString() : new Date().toISOString();
     return lg;
   }
-  window.WR = { block: BLOCK, rows: sheetRows, bodyweightRow: bodyweightRow, fromSheet: fromSheet, program: receiveProgram };
+  window.WR = { block: BLOCK, rows: sheetRows, bodyweightRow: bodyweightRow, fromSheet: fromSheet, program: receiveProgram, maxesOut: maxesOut, maxes: receiveMaxes };
 
   // ---------- Staying current ----------
   // When the app comes back on screen (no timers), it checks for a newer version of itself and reloads right then,
@@ -3123,7 +3150,7 @@ input.w { width: 88px; } input.r { width: 64px; } input.s { width: 200px; max-wi
   }
   function schedule(ms) { clearTimeout(timer); timer = setTimeout(flush, ms); }
   function mark(col, id) {
-    if (col !== "logs" && col !== "bodyweight") return;
+    if (col !== "logs" && col !== "bodyweight" && col !== "maxes") return;
     pending[col + "/" + id] = stampOf();
     put(PEND, pending);
     show();
@@ -3140,6 +3167,7 @@ input.w { width: 88px; } input.r { width: 64px; } input.s { width: 200px; max-wi
     Object.keys(pending).forEach(function (k) {
       var i = k.indexOf("/"), col = k.slice(0, i), id = k.slice(i + 1), doc = (d[col] || {})[id];
       sent[k] = pending[k];
+      if (col === "maxes") { try { body.maxes = window.WR.maxesOut(); } catch (e) {} return; }
       if (!doc) return;
       try {
         if (col === "logs") body.sessions.push(window.WR.rows(id, doc));
@@ -3224,7 +3252,12 @@ input.w { width: 88px; } input.r { width: 64px; } input.s { width: 200px; max-wi
       .then(function (r) { return r.json(); })
       .then(function (res) {
         // An older sync script answers without a program; the app keeps what it has.
-        if (res && res.ok && Array.isArray(res.program)) window.WR.program({ program: res.program, weeks: res.weeks || [], lifts: res.lifts || [] });
+        if (res && res.ok && Array.isArray(res.program)) {
+          window.WR.program({ program: res.program, weeks: res.weeks || [], lifts: res.lifts || [] });
+          // Training maxes: the Sheet's Maxes tab wins, unless a change made on this phone hasn't reached it yet.
+          // An empty tab gets this phone's maxes.
+          if (Array.isArray(res.maxes) && window.WR.maxes && !pending["maxes/all"] && !window.WR.maxes(res.maxes)) mark("maxes", "all");
+        }
         // A wrong passcode shows up here first when nothing is waiting to send.
         else if (res && res.error === "passcode" && get(PASS) === pass) {
           put(PASS, null); state = "badpass"; show();

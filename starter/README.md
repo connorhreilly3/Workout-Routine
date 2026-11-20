@@ -72,7 +72,7 @@ window.APP_SETTINGS = {
 
 - `trainingMax` drives every % load in the program: back squat, bench press, trap bar deadlift, strict press and power clean, in lb. A good training max is about 90% of a 1-rep max you could hit today. If you don't know your maxes, guess low; the test week resets them.
 - `oneRepMax` is for reference on the Maxes tab.
-- You can change training maxes later on the app's **Maxes** tab; those edits are saved on your phone.
+- Once the Sheet is connected, your training maxes live on its **Maxes** tab. Change them there or on the app's Maxes tab; each updates the other.
 
 Click **Commit changes**. Never put your passcode in this file. The app asks for it on your phone instead.
 

@@ -38,7 +38,8 @@ KEY FACTS
   - Sets: Block, Session ID, Date, Week, Lift, Exercise, Set, Prescribed (e.g. "5 @ 75%" or "3 x 8 each leg"), Weight (lb), Reps, Missed, Done.
   - Bodyweight: Block, Week, Date, Weight (lb).
   - Runs: Date, Summary. One row per run of this task.
-- App settings: clone the repo (git clone --depth 1 <repo URL>) and read window.APP_SETTINGS at the top of index.html: trainingMax (training maxes in lb for squat, bench, trap, press, clean), classes (day 0 = Mon ... 6 = Sun, with a time) and restDay. A main lift's load is training max × % rounded to the nearest 5 lb. I can change training maxes on the app's Maxes tab, which this task can't see, so a newer number in a session note or LAST RUN wins.
+- Training maxes: the Sheet's "Maxes" tab (Lift, ID, 1RM, Training max, Updated; ID is squat, bench, trap, press or clean). The app keeps it in step with my phone. A main lift's load is training max × % rounded to the nearest 5 lb.
+- App settings: clone the repo (git clone --depth 1 <repo URL>) and read window.APP_SETTINGS at the top of index.html: classes (day 0 = Mon ... 6 = Sun, with a time) and restDay. Use its trainingMax only if the Maxes tab is missing or empty.
 
 Each step is independent. If one fails, finish the others and report what failed.
 

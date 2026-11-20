@@ -1,8 +1,9 @@
-// Workout Routine sync (starter kit, from v4).
+// Workout Routine sync (starter kit, from v5).
 // Paste this into your Sheet's Apps Script editor (Extensions > Apps Script), set PASSCODE, then deploy
 // as a web app: Execute as Me, Who has access Anyone. See README.md in the starter folder.
 // Receives sessions from the Workout Routine app and writes them to this Sheet,
-// and sends the app its program from the Program, Program · Weeks and Program · Lifts tabs.
+// sends the app its program from the Program, Program · Weeks and Program · Lifts tabs,
+// and keeps training maxes on the Maxes tab in step with the app.
 // Rows are matched on Block + Session ID, so re-sending a session updates it instead of duplicating it.
 
 // The passcode you type into the app. Pick your own and keep the quotes.
@@ -26,6 +27,7 @@ function doPost(e) {
     const weights = body.bodyweight || [];
     sessions.forEach(function (s) { writeSession(ss, s); });
     weights.forEach(function (b) { writeBodyweight(ss, b); });
+    if (Array.isArray(body.maxes)) writeMaxes(ss, body.maxes);
     return reply({ ok: true, sessions: sessions.length, bodyweight: weights.length });
   } catch (err) {
     return reply({ ok: false, error: String(err) });
@@ -42,7 +44,7 @@ function doGet(e) {
   if (p.program) {
     if (!passOk(p.passcode)) return reply({ ok: false, error: 'passcode' });
     const book = SpreadsheetApp.getActiveSpreadsheet();
-    return reply({ ok: true, program: readTab(book, 'Program'), weeks: readTab(book, 'Program · Weeks', true), lifts: readTab(book, 'Program · Lifts') });
+    return reply({ ok: true, program: readTab(book, 'Program'), weeks: readTab(book, 'Program · Weeks', true), lifts: readTab(book, 'Program · Lifts'), maxes: readTab(book, 'Maxes') });
   }
   if (!p.read) return reply({ ok: true, app: 'Workout Routine sync' });
   if (!passOk(p.passcode)) return reply({ ok: false, error: 'passcode' });
@@ -81,6 +83,31 @@ function readTab(ss, name, dates) {
   const raw = rg.getValues(), tz = ss.getSpreadsheetTimeZone();
   return shown.map(function (r, i) {
     return r.map(function (x, j) { return raw[i][j] instanceof Date ? Utilities.formatDate(raw[i][j], tz, 'yyyy-MM-dd') : x; });
+  });
+}
+
+// Training maxes from the app. m = [{ id, name, oneRm, tm }]. Rows are matched on ID; the columns are found by header.
+function writeMaxes(ss, m) {
+  let sh = ss.getSheetByName('Maxes');
+  if (!sh) {
+    sh = ss.insertSheet('Maxes');
+    sh.getRange(1, 1, 1, 5).setValues([['Lift', 'ID', '1RM', 'Training max', 'Updated']]).setFontWeight('bold');
+    sh.setFrozenRows(1);
+  }
+  const head = sh.getRange(1, 1, 1, Math.max(1, sh.getLastColumn())).getValues()[0].map(function (h) { return String(h).trim().toLowerCase(); });
+  const col = function (name) { return head.indexOf(name) + 1; };
+  const cId = col('id'), cName = col('lift'), cOne = col('1rm'), cTm = col('training max'), cAt = col('updated');
+  if (!cId || !cTm) return;
+  const last = sh.getLastRow();
+  const ids = last > 1 ? sh.getRange(2, cId, last - 1, 1).getValues().map(function (r) { return String(r[0]).trim(); }) : [];
+  const now = Utilities.formatDate(new Date(), ss.getSpreadsheetTimeZone(), 'yyyy-MM-dd HH:mm');
+  m.forEach(function (x) {
+    const id = String(x.id || ''); if (!id) return;
+    let r = ids.indexOf(id) + 2;
+    if (r < 2) { r = sh.getLastRow() + 1; ids.push(id); sh.getRange(r, cId).setValue(id); if (cName) sh.getRange(r, cName).setValue(x.name || id); }
+    const tm = Number(x.tm), one = Number(x.oneRm);
+    if (isFinite(tm) && tm > 0 && Number(sh.getRange(r, cTm).getValue()) !== tm) { sh.getRange(r, cTm).setValue(tm); if (cAt) sh.getRange(r, cAt).setValue(now); }
+    if (cOne && isFinite(one) && one > 0 && Number(sh.getRange(r, cOne).getValue()) !== one) { sh.getRange(r, cOne).setValue(one); if (cAt) sh.getRange(r, cAt).setValue(now); }
   });
 }
 
