@@ -543,7 +543,7 @@ input.w { width: 88px; } input.r { width: 64px; } input.s { width: 200px; max-wi
   var ONE_RM = Object.assign({}, ONE_RM_PLAN, recall("wr-1rm") || {});
   var TM = Object.assign({}, TM_PLAN, recall("wr-tm") || {});
   // Shown at the bottom of the Maxes tab; bump it with every update so it's easy to tell which version a phone has.
-  var APP_VERSION = "23 · Nov 19";
+  var APP_VERSION = "24 · Nov 19";
   var TM_NAMES = { squat: "Back squat", bench: "Bench press", trap: "Trap bar deadlift", press: "Strict press", clean: "Power clean" };
   var BARBELL = { squat: true, bench: true, press: true, clean: true };
 
@@ -826,6 +826,132 @@ input.w { width: 88px; } input.r { width: 64px; } input.s { width: 200px; max-wi
     return i == null ? t[0] : (t[i] != null ? t[i] : t[t.length - 1]);
   }
 
+  // ---------- Program from the Google Sheet ----------
+  // The Workout Routine sheet's "Program", "Program · Weeks" and "Program · Lifts" tabs, read back into
+  // WEEKS, LIFT_META, SESS and TARGETS. Columns are found by their header, so they can be reordered.
+  var PDAYS = ["mon", "tue", "wed", "thu", "fri", "sat", "sun"], TM_KEYS = ["squat", "bench", "trap", "press", "clean"];
+  function pDay(t) { var i = PDAYS.indexOf(String(t || "").trim().toLowerCase().slice(0, 3)); return i < 0 ? null : i; }
+  function pYes(t) { return /^(true|yes|y|x|✓)$/i.test(String(t || "").trim()); }
+  function pCols(head, map) {
+    var h = head.map(function (x) { return String(x || "").trim().toLowerCase(); }), out = {};
+    Object.keys(map).forEach(function (k) { out[k] = -1; for (var i = 0; i < h.length; i++) if (map[k].test(h[i])) { out[k] = i; break; } });
+    return out;
+  }
+  function pGet(r, c) { return c >= 0 && r[c] != null ? String(r[c]).trim() : ""; }
+  function pNums(t) { return String(t || "").replace(/%/g, "").split("/").map(function (x) { return parseFloat(x); }); }
+  function pTimer(t) {
+    t = String(t || "").trim(); if (!t) return null;
+    var m, lab = function (s) { return s ? s.split("|").map(function (x) { return x.trim(); }).filter(Boolean) : []; };
+    if ((m = t.match(/^emom\s+(\d+)\s*(?::\s*(.*))?$/i))) { var o = { type: "emom", min: +m[1] }, L = lab(m[2]); if (L.length) o.labels = L; return o; }
+    if ((m = t.match(/^amrap\s+(\d+)/i))) return { type: "amrap", min: +m[1] };
+    if (/^for time/i.test(t)) { var f = { type: "fortime" }, c = t.match(/(\d+)\s*min cap/i); if (c) f.cap = +c[1]; if (/rounds/i.test(t)) f.rounds = true; return f; }
+    if ((m = t.match(/^intervals\s+(\d+)\s*\/\s*(\d+)\s*[×x]\s*(\d+)\s*(?::\s*([^;]*))?(?:;\s*rest:\s*(.*))?$/i))) {
+      var v = { type: "intervals", work: +m[1], rest: +m[2], rounds: +m[3] }, L2 = lab(m[4]);
+      if (L2.length) v.labels = L2; if (m[5] && m[5].trim()) v.restLabel = m[5].trim(); return v;
+    }
+    return null;
+  }
+  function programFromSheet(P) {
+    if (!P || !P.program || P.program.length < 2) return null;
+    var out = { weeks: [], lifts: {}, sess: { 1: [], 2: [], 3: [], 4: [] }, targets: {} };
+    // Weeks: Week | Starts | Phase | Intent | Test week
+    if (P.weeks && P.weeks.length > 1) {
+      var W = pCols(P.weeks[0], { n: /^week/, start: /^start/, phase: /^phase/, intent: /^intent|^focus/, test: /^test/ });
+      P.weeks.slice(1).forEach(function (r) {
+        var n = parseInt(pGet(r, W.n), 10), st = pGet(r, W.start);
+        if (!n || !/^\d{4}-\d{2}-\d{2}$/.test(st)) return;
+        var w = { n: n, start: st, phase: pGet(r, W.phase), intent: pGet(r, W.intent) };
+        if (pYes(pGet(r, W.test))) w.test = true;
+        out.weeks.push(w);
+      });
+    }
+    // Lifts: Lift | Label | Title | Usual day | Time | Duration | Warm-up
+    if (P.lifts && P.lifts.length > 1) {
+      var Lc = pCols(P.lifts[0], { l: /^lift/, label: /^label/, title: /^title|^name/, day: /day/, time: /^time/, dur: /^dur/, warm: /^warm/ });
+      P.lifts.slice(1).forEach(function (r) {
+        var l = parseInt(pGet(r, Lc.l), 10); if (!(l >= 1 && l <= 4)) return;
+        out.lifts[l] = { day: pDay(pGet(r, Lc.day)) == null ? 0 : pDay(pGet(r, Lc.day)), label: pGet(r, Lc.label) || "Lift " + l, title: pGet(r, Lc.title),
+          time: pGet(r, Lc.time), dur: pGet(r, Lc.dur), warm: pGet(r, Lc.warm) };
+      });
+    }
+    // Program: one row per exercise. Week and Lift only where they change; Block where a block starts.
+    var C = pCols(P.program[0], { week: /^week/, lift: /^lift/, block: /^block$/, bname: /^block name/, rest: /^rest/, n: /^exercise/,
+      rx: /^sets/, load: /^load/, back: /^back/, note: /^notes?$/, log: /^log/, timer: /^timer/, id: /^id$/,
+      day: /^day/, warm: /^warm/, test: /^test/, snote: /^session note/, off: /^off/ });
+    var week = 0, lift = 0, s = null, b = null;
+    P.program.slice(1).forEach(function (r) {
+      var wk = parseInt(pGet(r, C.week), 10), lf = parseInt(pGet(r, C.lift), 10);
+      if (wk) week = wk;
+      if (lf || wk) {
+        lift = lf || lift; b = null;
+        if (!(week >= 1 && lift >= 1 && lift <= 4)) { s = null; return; }
+        s = out.sess[lift][week - 1] = { blocks: [] };
+      }
+      if (!s) return;
+      var d = pDay(pGet(r, C.day)); if (d != null) s.day = d;
+      if (pGet(r, C.warm)) s.warm = pGet(r, C.warm);
+      if (pYes(pGet(r, C.test))) s.test = true;
+      if (pGet(r, C.snote)) s.note = pGet(r, C.snote);
+      if (pGet(r, C.off)) { out.sess[lift][week - 1] = s = { off: pGet(r, C.off) }; return; }
+      if (!s.blocks) return;
+      if (pGet(r, C.block)) { b = { t: pGet(r, C.block), name: pGet(r, C.bname), rest: pGet(r, C.rest), items: [] }; s.blocks.push(b); }
+      var n = pGet(r, C.n); if (!n) return;
+      if (!b) { b = { t: "", name: "", rest: "", items: [] }; s.blocks.push(b); }
+      var it = { k: pGet(r, C.id) || n.toLowerCase().replace(/[^a-z0-9]+/g, ""), n: n };
+      var load = pGet(r, C.load), rx = pGet(r, C.rx), log = pGet(r, C.log);
+      if (/%/.test(load) && TM_KEYS.indexOf(it.k) >= 0) {
+        // Main lift: reps and % of training max, per set or "4 × 5" with one %.
+        var pc = pNums(load), m = rx.match(/^(\d+)\s*[×x]\s*(\d+)$/), reps = m ? [] : pNums(rx);
+        if (m) for (var i = 0; i < +m[1]; i++) reps.push(+m[2]);
+        it.main = it.k; it.sets = reps.map(function (rp, j) { return [rp, pc[j] != null && !isNaN(pc[j]) ? pc[j] : pc[pc.length - 1]]; });
+        var bo = [], re = /(\d+)\s*@\s*(\d+(?:\.\d+)?)/g, x, bt = pGet(r, C.back);
+        while ((x = re.exec(bt))) bo.push([+x[1], +x[2]]);
+        if (bo.length) it.backoff = bo;
+        it.log = "top";
+      } else {
+        if (rx) it.rx = rx;
+        var ws = load ? pNums(load) : [];
+        if (ws.length && ws.every(function (v) { return v > 0; })) {
+          var tk = "w" + week + "-l" + lift; (out.targets[tk] = out.targets[tk] || {})[it.k] = ws.length === 1 ? ws[0] : ws;
+        }
+        if (/^weight/i.test(log)) it.log = "load";
+        else if (/^score/i.test(log)) { it.log = "score"; it.ph = log.replace(/^score\s*:?\s*/i, ""); }
+        var tm = pTimer(pGet(r, C.timer)); if (tm) it.timer = tm;
+      }
+      if (pGet(r, C.note)) it.note = pGet(r, C.note);
+      b.items.push(it);
+    });
+    var any = false;
+    [1, 2, 3, 4].forEach(function (l) { if (out.sess[l].length) any = true; });
+    return any ? out : null;
+  }
+
+  // Swap in the sheet's program for the built-in one. A week with no workout for a lift becomes an off day.
+  var PROG_KEY = "wr-program", programFrom = "";
+  function applyProgram(P) {
+    var g = programFromSheet(P);
+    if (!g) return false;
+    if (g.weeks.length) { WEEKS.length = 0; g.weeks.forEach(function (w) { WEEKS.push(w); }); }
+    [1, 2, 3, 4].forEach(function (l) {
+      if (g.lifts[l]) LIFT_META[l] = g.lifts[l];
+      var arr = g.sess[l];
+      for (var i = 0; i < WEEKS.length; i++) if (!arr[i]) arr[i] = { off: "No lift this week." };
+      SESS[l] = arr;
+    });
+    Object.keys(TARGETS).forEach(function (k) { delete TARGETS[k]; });
+    Object.keys(g.targets).forEach(function (k) { TARGETS[k] = g.targets[k]; });
+    programFrom = "sheet";
+    return true;
+  }
+  // From the sync: the program as read from the Sheet. Kept on the phone so the next open starts with it.
+  function receiveProgram(P) {
+    if (JSON.stringify(P) === JSON.stringify(recall(PROG_KEY))) return;
+    if (!applyProgram(P)) return;
+    store(PROG_KEY, P);
+    if (busyNow()) return; // the next redraw picks it up
+    var y = window.scrollY; render(); window.scrollTo(0, y);
+  }
+
   function dayEntries(w) {
     var d = [
       [{ kind: "lift", lift: 1 }],
@@ -1102,7 +1228,7 @@ input.w { width: 88px; } input.r { width: 64px; } input.s { width: 200px; max-wi
       if (b.getAttribute("data-v") === view) b.setAttribute("aria-current", "page"); else b.removeAttribute("aria-current");
     });
     var cur = sel || nowPick;
-    document.getElementById("ctx").textContent = view === "week" ? "Pre-Trek Block · Week " + weekSel + " of 5" : (cur.extra ? "Pre-Trek Block · Extra session" : "Pre-Trek Block · Week " + cur.week + " of 5");
+    document.getElementById("ctx").textContent = view === "week" ? "Pre-Trek Block · Week " + weekSel + " of " + WEEKS.length : (cur.extra ? "Pre-Trek Block · Extra session" : "Pre-Trek Block · Week " + cur.week + " of " + WEEKS.length);
     viewEl.innerHTML = "";
     if (view === "today") renderToday();
     else if (view === "week") renderWeek();
@@ -2606,7 +2732,7 @@ input.w { width: 88px; } input.r { width: 64px; } input.s { width: 200px; max-wi
     rc.appendChild(ul);
     rc.appendChild(el("p", "src", "Built from Spring Training (percentage progressions, core series), 4 Horsemen (light–heavy–test waves), HIIB 100 and HIBB (10 × 10 and interval formats), and PPSA Pool Season / The Mullet (main lift, then high-rep supersets; fill in your weights)."));
     viewEl.appendChild(rc);
-    viewEl.appendChild(el("p", "appver", "App version " + APP_VERSION));
+    viewEl.appendChild(el("p", "appver", "App version " + APP_VERSION + (programFrom === "sheet" ? " · Program from your Google Sheet" : " · Built-in program")));
   }
 
   // Saves a training max (and, when accepting a test result, the new 1RM) on this phone.
@@ -2799,7 +2925,7 @@ input.w { width: 88px; } input.r { width: 64px; } input.s { width: 200px; max-wi
     lg.updatedAt = up && !isNaN(up) ? up.toISOString() : new Date().toISOString();
     return lg;
   }
-  window.WR = { block: BLOCK, rows: sheetRows, bodyweightRow: bodyweightRow, fromSheet: fromSheet };
+  window.WR = { block: BLOCK, rows: sheetRows, bodyweightRow: bodyweightRow, fromSheet: fromSheet, program: receiveProgram };
 
   // ---------- Staying current ----------
   // When the app comes back on screen (no timers), it checks for a newer version of itself and reloads right then,
@@ -2830,6 +2956,8 @@ input.w { width: 88px; } input.r { width: 64px; } input.s { width: 200px; max-wi
     if (document.visibilityState !== "visible") return;
     if (newVersion) maybeReload(); else checkVersion();
   });
+  var saved = recall(PROG_KEY);
+  if (saved) applyProgram(saved);
   var ui0 = null;
   try { ui0 = JSON.parse(sessionStorage.getItem(UIKEY) || "null"); sessionStorage.removeItem(UIKEY); } catch (e) {}
   if (ui0) {
@@ -3002,7 +3130,7 @@ input.w { width: 88px; } input.r { width: 64px; } input.s { width: 200px; max-wi
     document.getElementById("syncdlg-save").addEventListener("click", function () {
       var v = inp.value.trim();
       if (!v) { inp.focus(); return; }
-      put(PASS, v); state = ""; closeDlg(); show(); restore(); flush();
+      put(PASS, v); state = ""; closeDlg(); show(); restore(); loadProgram(); flush();
     });
     inp.addEventListener("keydown", function (e) { if (e.key === "Enter") document.getElementById("syncdlg-save").click(); });
   }
@@ -3013,9 +3141,25 @@ input.w { width: 88px; } input.r { width: 64px; } input.s { width: 200px; max-wi
   window.addEventListener("pageshow", function () { schedule(800); });
   setInterval(function () { if (count() && !busy && document.visibilityState === "visible") flush(); }, 60000);
 
-  window.WRSync = { mark: mark, flush: flush, restore: restore };
+  // The program lives in the Sheet's Program tabs: fetched when the app opens and when it comes back on screen.
+  var progAt = 0;
+  function loadProgram() {
+    var pass = get(PASS);
+    if (!SYNC_URL || !pass || !window.WR || !window.WR.program || Date.now() - progAt < 15000) return;
+    progAt = Date.now();
+    fetch(SYNC_URL + "?program=1&passcode=" + encodeURIComponent(pass))
+      .then(function (r) { return r.json(); })
+      .then(function (res) {
+        // An older sync script answers without a program; the app keeps what it has.
+        if (res && res.ok && Array.isArray(res.program)) window.WR.program({ program: res.program, weeks: res.weeks || [], lifts: res.lifts || [] });
+      }, function () {});
+  }
+  document.addEventListener("visibilitychange", function () { if (document.visibilityState === "visible") loadProgram(); });
+
+  window.WRSync = { mark: mark, flush: flush, restore: restore, program: loadProgram };
   show();
   restore();
+  loadProgram();
   schedule(1500);
 })();
 </script>
