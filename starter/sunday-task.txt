@@ -11,8 +11,8 @@ Weekly training run for [[YOUR NAME]]. I have authorized every action below, and
 
 YOUR DETAILS
 - Time zone: [[TIME ZONE, e.g. America/New_York]]. Use it for every date, time and calendar event (always pass this timeZone when creating or updating events).
-- Workout app: [[YOUR APP URL, e.g. https://yourname.github.io/Workout-Routine/]]
-- App code (public repo, branch main): [[YOUR GITHUB REPO URL, e.g. https://github.com/yourname/Workout-Routine]]
+- Workout app: [[YOUR APP URL, e.g. https://yourname.github.io/workout/]]
+- App code (public repo, branch main): [[YOUR GITHUB REPO URL, e.g. https://github.com/yourname/workout]]
 - Workout Routine Sheet ID: [[THE LONG ID FROM YOUR SHEET'S WEB ADDRESS, between /d/ and /edit]]
 - Calendar for lifts: [[THE CALENDAR TO PUT LIFTS ON, e.g. you@gmail.com]]
 - Other calendars to check for conflicts: [[e.g. your work calendar's address, or "none"]]
