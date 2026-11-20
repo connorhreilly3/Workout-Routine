@@ -543,7 +543,7 @@ input.w { width: 88px; } input.r { width: 64px; } input.s { width: 200px; max-wi
   var ONE_RM = Object.assign({}, ONE_RM_PLAN, recall("wr-1rm") || {});
   var TM = Object.assign({}, TM_PLAN, recall("wr-tm") || {});
   // Shown at the bottom of the Maxes tab; bump it with every update so it's easy to tell which version a phone has.
-  var APP_VERSION = "24 · Nov 19";
+  var APP_VERSION = "25 · Nov 19";
   var TM_NAMES = { squat: "Back squat", bench: "Bench press", trap: "Trap bar deadlift", press: "Strict press", clean: "Power clean" };
   var BARBELL = { squat: true, bench: true, press: true, clean: true };
 
@@ -856,8 +856,9 @@ input.w { width: 88px; } input.r { width: 64px; } input.s { width: 200px; max-wi
     var out = { weeks: [], lifts: {}, sess: { 1: [], 2: [], 3: [], 4: [] }, targets: {} };
     // Weeks: Week | Starts | Phase | Intent | Test week
     if (P.weeks && P.weeks.length > 1) {
-      var W = pCols(P.weeks[0], { n: /^week/, start: /^start/, phase: /^phase/, intent: /^intent|^focus/, test: /^test/ });
+      var W = pCols(P.weeks[0], { block: /^block/, n: /^week/, start: /^start/, phase: /^phase/, intent: /^intent|^focus/, test: /^test/ });
       P.weeks.slice(1).forEach(function (r) {
+        if (!out.block && pGet(r, W.block)) out.block = pGet(r, W.block);
         var n = parseInt(pGet(r, W.n), 10), st = pGet(r, W.start);
         if (!n || !/^\d{4}-\d{2}-\d{2}$/.test(st)) return;
         var w = { n: n, start: st, phase: pGet(r, W.phase), intent: pGet(r, W.intent) };
@@ -946,10 +947,29 @@ input.w { width: 88px; } input.r { width: 64px; } input.s { width: 200px; max-wi
   // From the sync: the program as read from the Sheet. Kept on the phone so the next open starts with it.
   function receiveProgram(P) {
     if (JSON.stringify(P) === JSON.stringify(recall(PROG_KEY))) return;
+    var g = programFromSheet(P);
+    if (g && (g.block || "Pre-Trek") !== BLOCK) return switchBlock(P);
     if (!applyProgram(P)) return;
     store(PROG_KEY, P);
     if (busyNow()) return; // the next redraw picks it up
     var y = window.scrollY; render(); window.scrollTo(0, y);
+  }
+
+  // A new block name on "Program · Weeks": this block's logs on the phone move aside under its name (the Sheet
+  // keeps them too), the log starts fresh, and the app reloads into the new block. It waits until every logged
+  // set has reached the Sheet, and never switches mid-workout; it tries again the next time the app opens.
+  function switchBlock(P) {
+    if (busyNow() || running) return;
+    var sync = window.WRSync;
+    if (sync && sync.pending && sync.pending() > 0) { sync.flush(); return; }
+    try {
+      var cur = localStorage.getItem("ptb-db-v1");
+      if (cur) localStorage.setItem("ptb-db-archive-" + BLOCK, cur);
+      localStorage.setItem("ptb-db-v1", JSON.stringify({ logs: {}, bodyweight: {} }));
+    } catch (e) { return; }
+    store("ptb-running", null);
+    store(PROG_KEY, P);
+    location.reload();
   }
 
   function dayEntries(w) {
@@ -962,7 +982,7 @@ input.w { width: 88px; } input.r { width: 64px; } input.s { width: 200px; max-wi
       [{ kind: "lift", lift: 4 }],
       [{ kind: "off", name: "Off" }]
     ];
-    var tn = Object.assign({}, TENNIS_DEFAULT, TENNIS[w] || {});
+    var tn = Object.assign({}, TENNIS_DEFAULT, (BLOCK === "Pre-Trek" && TENNIS[w]) || {});
     if (!tn.skip) d[tn.day].push({ kind: "class", name: tn.booked ? "Tennis clinic · booked" : "Tennis clinic", tm: tn.tm, where: "Wharton Tennis Club", booked: !!tn.booked });
     if (w === 2) {
       d[4] = [{ kind: "travel", name: "Napa", note: "A long hike counts" }, { kind: "lift", lift: 3 }];
@@ -1228,7 +1248,7 @@ input.w { width: 88px; } input.r { width: 64px; } input.s { width: 200px; max-wi
       if (b.getAttribute("data-v") === view) b.setAttribute("aria-current", "page"); else b.removeAttribute("aria-current");
     });
     var cur = sel || nowPick;
-    document.getElementById("ctx").textContent = view === "week" ? "Pre-Trek Block · Week " + weekSel + " of " + WEEKS.length : (cur.extra ? "Pre-Trek Block · Extra session" : "Pre-Trek Block · Week " + cur.week + " of " + WEEKS.length);
+    document.getElementById("ctx").textContent = view === "week" ? BLOCK + " Block · Week " + weekSel + " of " + WEEKS.length : (cur.extra ? BLOCK + " Block · Extra session" : BLOCK + " Block · Week " + cur.week + " of " + WEEKS.length);
     viewEl.innerHTML = "";
     if (view === "today") renderToday();
     else if (view === "week") renderWeek();
@@ -2840,7 +2860,9 @@ input.w { width: 88px; } input.r { width: 64px; } input.s { width: 200px; max-wi
 
   // ---------- Sheet rows (used by the sync below) ----------
   // BLOCK names this program in the Sheet. Give each new program its own name.
-  var BLOCK = "Pre-Trek";
+  // This block's name: the Block column on "Program · Weeks" (log rows in the Sheet are filed under it).
+  var BLOCK = (function () { var g = programFromSheet(recall(PROG_KEY)); return (g && g.block) || "Pre-Trek"; })();
+  document.title = BLOCK + " Block";
   function sheetRows(id, lg) {
     lg = lg || {};
     var s = sessDef(id); if (!s || !s.blocks) s = { blocks: [] };
@@ -3022,7 +3044,7 @@ input.w { width: 88px; } input.r { width: 64px; } input.s { width: 200px; max-wi
 
   // Restore: on a phone (or address) that's missing sessions the Sheet has, pull them back once.
   // Sessions already on this phone are never overwritten.
-  var RESTORED = "wr-restore-v1", restoring = false;
+  var RESTORED = "wr-restore-v1" + (window.WR && window.WR.block && window.WR.block !== "Pre-Trek" ? ":" + window.WR.block : ""), restoring = false;
   function restore() {
     var pass = get(PASS);
     if (!SYNC_URL || !pass || get(RESTORED) || restoring || !window.WR || !window.WR.fromSheet || !window.__wrPut) return;
@@ -3156,7 +3178,7 @@ input.w { width: 88px; } input.r { width: 64px; } input.s { width: 200px; max-wi
   }
   document.addEventListener("visibilitychange", function () { if (document.visibilityState === "visible") loadProgram(); });
 
-  window.WRSync = { mark: mark, flush: flush, restore: restore, program: loadProgram };
+  window.WRSync = { mark: mark, flush: flush, restore: restore, program: loadProgram, pending: count };
   show();
   restore();
   loadProgram();
