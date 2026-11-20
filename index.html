@@ -543,7 +543,7 @@ input.w { width: 88px; } input.r { width: 64px; } input.s { width: 200px; max-wi
   var ONE_RM = Object.assign({}, ONE_RM_PLAN, recall("wr-1rm") || {});
   var TM = Object.assign({}, TM_PLAN, recall("wr-tm") || {});
   // Shown at the bottom of the Maxes tab; bump it with every update so it's easy to tell which version a phone has.
-  var APP_VERSION = "25 · Nov 19";
+  var APP_VERSION = "26 · Nov 19";
   var TM_NAMES = { squat: "Back squat", bench: "Bench press", trap: "Trap bar deadlift", press: "Strict press", clean: "Power clean" };
   var BARBELL = { squat: true, bench: true, press: true, clean: true };
 
@@ -854,15 +854,15 @@ input.w { width: 88px; } input.r { width: 64px; } input.s { width: 200px; max-wi
   function programFromSheet(P) {
     if (!P || !P.program || P.program.length < 2) return null;
     var out = { weeks: [], lifts: {}, sess: { 1: [], 2: [], 3: [], 4: [] }, targets: {} };
-    // Weeks: Week | Starts | Phase | Intent | Test week
+    // Weeks: Block | Week | Starts | Phase | Intent
     if (P.weeks && P.weeks.length > 1) {
-      var W = pCols(P.weeks[0], { block: /^block/, n: /^week/, start: /^start/, phase: /^phase/, intent: /^intent|^focus/, test: /^test/ });
+      var W = pCols(P.weeks[0], { block: /^block/, n: /^week/, start: /^start/, phase: /^phase/, intent: /^intent|^focus/ });
       P.weeks.slice(1).forEach(function (r) {
         if (!out.block && pGet(r, W.block)) out.block = pGet(r, W.block);
         var n = parseInt(pGet(r, W.n), 10), st = pGet(r, W.start);
         if (!n || !/^\d{4}-\d{2}-\d{2}$/.test(st)) return;
         var w = { n: n, start: st, phase: pGet(r, W.phase), intent: pGet(r, W.intent) };
-        if (pYes(pGet(r, W.test))) w.test = true;
+        if (/\btest\b/i.test(w.phase)) w.test = true; // the test week is the one whose Phase says "Test"
         out.weeks.push(w);
       });
     }
