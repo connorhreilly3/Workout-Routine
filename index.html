@@ -1,6 +1,35 @@
 <!doctype html>
 <html lang="en">
 <head>
+<script>
+/* ==========================================================================
+   YOUR SETTINGS. This is the only part of the app you need to edit.
+   Your program (weeks, lifts, exercises, loads) lives in your Google Sheet.
+   ========================================================================== */
+window.APP_SETTINGS = {
+  // The name under the Home Screen icon.
+  appName: "Pre-Trek",
+  // Your sync script's web app address, ending in /exec (Apps Script: Deploy > Manage deployments).
+  syncUrl: "https://script.google.com/macros/s/AKfycbzNRNvmgsXimHRz-8bfrjcmK2rNrKYJJGmi3OR1NpYIQXQUpYWI0JJv0b2EXGh34B1o/exec",
+  // Where you lift. Travel days say "Away from <gym>".
+  gym: "Fitler Club",
+  // Classes you take every week, shown on Today and the Week tab. day: 0 = Mon, 1 = Tue ... 6 = Sun.
+  // A class with AM in its time is listed before that day's lift; anything else after it.
+  classes: [
+    { day: 1, name: "Boxing · Rhythm & Rounds", time: "7:00 AM", where: "Fitler Club" },
+    { day: 4, name: "Mat Pilates x Strength", time: "9:00 AM", where: "Fitler Club" },
+    { day: 2, name: "Tennis clinic", time: "evening, time varies", where: "Wharton Tennis Club" }
+  ],
+  // Your weekly day off (0 = Mon ... 6 = Sun), or null for none.
+  restDay: 6,
+  // Shown next to the weekly weigh-in on the Week tab.
+  weighInNote: "Goal 180, slowly. Same scale, same morning.",
+  // Starting maxes in lb for squat, bench press, trap bar deadlift, strict press and power clean.
+  // Main lifts' % loads use the training max. Edits on the app's Maxes tab are saved on the phone and win.
+  trainingMax: { squat: 305, bench: 270, trap: 405, press: 185, clean: 205 },
+  oneRepMax: { squat: 340, bench: 300, trap: 450, press: 205, clean: 225 }
+};
+</script>
       <link rel="apple-touch-icon" href="lifter-icon-v2.png">
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
@@ -538,12 +567,13 @@ input.w { width: 88px; } input.r { width: 64px; } input.s { width: 200px; max-wi
   "use strict";
   // ---------- Program data ----------
   // Plan values; edits made on the Maxes tab are saved on this phone and replace them.
-  var ONE_RM_PLAN = { squat: 340, bench: 300, trap: 450, press: 205, clean: 225 };
-  var TM_PLAN = { squat: 305, bench: 270, trap: 405, press: 185, clean: 205 };
+  var SETTINGS = window.APP_SETTINGS || {};
+  var ONE_RM_PLAN = Object.assign({ squat: 0, bench: 0, trap: 0, press: 0, clean: 0 }, SETTINGS.oneRepMax || {});
+  var TM_PLAN = Object.assign({ squat: 0, bench: 0, trap: 0, press: 0, clean: 0 }, SETTINGS.trainingMax || {});
   var ONE_RM = Object.assign({}, ONE_RM_PLAN, recall("wr-1rm") || {});
   var TM = Object.assign({}, TM_PLAN, recall("wr-tm") || {});
   // Shown at the bottom of the Maxes tab; bump it with every update so it's easy to tell which version a phone has.
-  var APP_VERSION = "26 · Nov 19";
+  var APP_VERSION = "27 · Nov 19";
   var TM_NAMES = { squat: "Back squat", bench: "Bench press", trap: "Trap bar deadlift", press: "Strict press", clean: "Power clean" };
   var BARBELL = { squat: true, bench: true, press: true, clean: true };
 
@@ -802,7 +832,7 @@ input.w { width: 88px; } input.r { width: 64px; } input.s { width: 200px; max-wi
 
   // Tennis clinic by block week. Default is Wednesday evening; a week listed here
   // moves it (day: 0 = Mon ... 5 = Sat) and/or sets the booked time. skip: true hides it.
-  var TENNIS_DEFAULT = { day: 2, tm: "evening, time varies" };
+  var TENNIS_DEFAULT = { day: 2, tm: "evening, time varies" }; // the clinic's usual slot; the app takes it from YOUR SETTINGS
   var TENNIS = {
     1: { day: 3, tm: "6:30–8:00 PM", booked: true },
     2: { skip: true },
@@ -951,6 +981,7 @@ input.w { width: 88px; } input.r { width: 64px; } input.s { width: 200px; max-wi
     if (g && (g.block || "Pre-Trek") !== BLOCK) return switchBlock(P);
     if (!applyProgram(P)) return;
     store(PROG_KEY, P);
+    if (weekSel > WEEKS.length) weekSel = pickNow().week || 1;
     if (busyNow()) return; // the next redraw picks it up
     var y = window.scrollY; render(); window.scrollTo(0, y);
   }
@@ -973,23 +1004,31 @@ input.w { width: 88px; } input.r { width: 64px; } input.s { width: 200px; max-wi
   }
 
   function dayEntries(w) {
-    var d = [
-      [{ kind: "lift", lift: 1 }],
-      [{ kind: "class", name: "Boxing · Rhythm & Rounds", tm: "7:00 AM", where: "Fitler Club" }],
-      [],
-      [{ kind: "lift", lift: 2 }],
-      [{ kind: "class", name: "Mat Pilates x Strength", tm: "9:00 AM", where: "Fitler Club" }, { kind: "lift", lift: 3 }],
-      [{ kind: "lift", lift: 4 }],
-      [{ kind: "off", name: "Off" }]
-    ];
-    var tn = Object.assign({}, TENNIS_DEFAULT, (BLOCK === "Pre-Trek" && TENNIS[w]) || {});
-    if (!tn.skip) d[tn.day].push({ kind: "class", name: tn.booked ? "Tennis clinic · booked" : "Tennis clinic", tm: tn.tm, where: "Wharton Tennis Club", booked: !!tn.booked });
-    if (w === 2) {
+    var d = [[], [], [], [], [], [], []];
+    if (SETTINGS.restDay != null && d[SETTINGS.restDay]) d[SETTINGS.restDay].push({ kind: "off", name: "Off" });
+    var cls = (SETTINGS.classes || []).map(function (c) {
+      var e = { kind: "class", name: c.name, tm: c.time || "", where: c.where || "" }, day = c.day;
+      // Pre-Trek's tennis weeks: moved, booked or skipped by block week (TENNIS above).
+      if (BLOCK === "Pre-Trek" && /tennis/i.test(c.name)) {
+        var tn = TENNIS[w] || {};
+        if (tn.skip) return null;
+        if (tn.day != null) day = tn.day;
+        if (tn.tm) e.tm = tn.tm;
+        if (tn.booked) { e.name = c.name + " · booked"; e.booked = true; }
+      }
+      return d[day] ? { day: day, e: e } : null;
+    }).filter(Boolean);
+    var am = function (x) { return /\bAM\b/.test(x.e.tm); };
+    cls.forEach(function (x) { if (am(x)) d[x.day].push(x.e); });
+    for (var l0 = 1; l0 <= 4; l0++) d[LIFT_META[l0].day].push({ kind: "lift", lift: l0 });
+    cls.forEach(function (x) { if (!am(x)) d[x.day].push(x.e); });
+    // Pre-Trek's trips (Napa, Tucson, Patagonia) belong to that block only.
+    if (BLOCK === "Pre-Trek" && w === 2) {
       d[4] = [{ kind: "travel", name: "Napa", note: "A long hike counts" }, { kind: "lift", lift: 3 }];
       d[5] = [{ kind: "travel", name: "Napa" }, { kind: "lift", lift: 4 }];
       d[6] = [{ kind: "travel", name: "Napa", note: "Off" }];
     }
-    if (w === 3) {
+    if (BLOCK === "Pre-Trek" && w === 3) {
       // Napa through Monday, then Tucson with a full gym. No Fitler classes or tennis.
       d[0] = [{ kind: "travel", name: "Napa" }, { kind: "lift", lift: 1 }];
       d[1] = [{ kind: "travel", name: "Tucson" }];
@@ -999,7 +1038,7 @@ input.w { width: 88px; } input.r { width: 64px; } input.s { width: 200px; max-wi
       d[5] = [{ kind: "travel", name: "Tucson" }, { kind: "lift", lift: 4 }];
       d[6] = [{ kind: "travel", name: "Tucson", note: "Off" }];
     }
-    if (w === 5) {
+    if (BLOCK === "Pre-Trek" && w === 5) {
       d[3] = [{ kind: "travel", name: "Puerto Natales" }];
       d[4] = [{ kind: "travel", name: "O Circuit trek" }];
       d[5] = [{ kind: "travel", name: "O Circuit trek" }];
@@ -1280,7 +1319,7 @@ input.w { width: 88px; } input.r { width: 64px; } input.s { width: 200px; max-wi
       var xc = el("span", "chip lift"); xc.appendChild(el("span", "k", "Extra")); xc.appendChild(document.createTextNode(EXTRA[x].title)); chips.appendChild(xc);
     }
     if (!te) {
-      chips.appendChild(el("span", "chip", today < WEEKS[0].start ? "The block starts Monday, Nov 9" : "The block is finished. Time to build the next one."));
+      chips.appendChild(el("span", "chip", today < WEEKS[0].start ? "The block starts " + parseISO(WEEKS[0].start).toLocaleDateString("en-US", { weekday: "long", month: "short", day: "numeric", timeZone: "UTC" }) : "The block is finished. Time to build the next one."));
     } else {
       te.ents.forEach(function (e) {
         var c;
@@ -1487,7 +1526,7 @@ input.w { width: 88px; } input.r { width: 64px; } input.s { width: 200px; max-wi
     var isTravel = s && s.travel;
     if (currentLog(id).done && !editing[id]) return renderSummary(card, head, s, id, isTravel ? TRAVEL.title : meta.title);
     head.appendChild(el("h2", null, isTravel ? TRAVEL.title : meta.title));
-    if (isTravel) head.appendChild(el("p", "meta", "Away from Fitler · " + TRAVEL.dur));
+    if (isTravel) head.appendChild(el("p", "meta", "Away from " + (SETTINGS.gym || "the gym") + " · " + TRAVEL.dur));
     if (!ex) head.appendChild(moveBox(pick));
     head.appendChild(runBox(id));
     card.appendChild(head);
@@ -2424,12 +2463,13 @@ input.w { width: 88px; } input.r { width: 64px; } input.s { width: 200px; max-wi
     var inp = numInput("w", function () { return { label: "Weigh-in · week " + w.n, unit: "Lb", decimals: true,
       onInput: function () { clearTimeout(bwTimer); bwTimer = setTimeout(function () { if (inp.value.slice(-1) !== ".") bwSave(inp.value); }, 700); },
       onLog: function () { KP.close(); },
-      onClose: function () { clearTimeout(bwTimer); bwSave(inp.value.replace(/\.$/, "")); } }; }); inp.id = "bw-input"; inp.placeholder = "187";
+      onClose: function () { clearTimeout(bwTimer); bwSave(inp.value.replace(/\.$/, "")); } }; }); inp.id = "bw-input";
+    for (var pk = w.n - 1; pk >= 1; pk--) { var pb = bodyweight["w" + pk]; if (pb && pb.lb != null) { inp.placeholder = String(pb.lb); break; } }
     var cur = bodyweight["w" + w.n];
     if (cur && cur.lb != null) inp.value = cur.lb;
     inp.addEventListener("change", function () { bwSave(inp.value); });
     bw.appendChild(inp);
-    bw.appendChild(el("span", null, "lb · Goal 180, slowly. Same scale, same morning."));
+    bw.appendChild(el("span", null, "lb · " + (SETTINGS.weighInNote || "Same scale, same morning.")));
     card.appendChild(bw);
     viewEl.appendChild(card);
   }
@@ -2706,7 +2746,8 @@ input.w { width: 88px; } input.r { width: 64px; } input.s { width: 200px; max-wi
     var card = el("section", "card");
     var pad = el("div", "pad");
     pad.appendChild(el("h3", null, "Training maxes"));
-    pad.appendChild(el("p", "muted", "Loads use 90% of your 1-rep maxes, the PPSA \"everyday max\": a weight you can hit on a bad day. Retested in week 4. Tap a training max to change it; every planned weight follows."));
+    var tw = WEEKS.filter(function (x) { return x.test; })[0];
+    pad.appendChild(el("p", "muted", "Loads use 90% of your 1-rep maxes, the PPSA \"everyday max\": a weight you can hit on a bad day." + (tw ? " Retested in week " + tw.n + "." : "") + " Tap a training max to change it; every planned weight follows."));
     card.appendChild(pad);
     var hdr = el("div", "tmrow");
     hdr.appendChild(el("span", "eyebrow", "Lift")); hdr.appendChild(el("span", "eyebrow", "1RM")); hdr.appendChild(el("span", "eyebrow", "Training max"));
@@ -2742,6 +2783,7 @@ input.w { width: 88px; } input.r { width: 64px; } input.s { width: 200px; max-wi
     viewEl.appendChild(card);
 
     var rc = el("section", "card");
+    if (BLOCK !== "Pre-Trek") rc.hidden = true; // these rules describe the Pre-Trek block only
     var rp = el("div", "pad"); rp.appendChild(el("h3", null, "Rules for this block")); rc.appendChild(rp);
     var ul = el("ul", "rules");
     ["Never miss a rep. On test days, take a PR single only if 95% moves fast.",
@@ -2774,7 +2816,7 @@ input.w { width: 88px; } input.r { width: 64px; } input.s { width: 200px; max-wi
       if (!s || !s.blocks || !lg || !lg.items) return;
       s.blocks.forEach(function (b) {
         b.items.forEach(function (it) {
-          if (!it.main || it.note !== PR_NOTE) return;
+          if (!it.main || !/\bPR\b/.test(it.note || "")) return; // test singles: a note that mentions a PR attempt
           var v = lg.items[it.k] || {}, ck = (lg.checks || {})[it.k] || [], plan = expandSets(it);
           (v.sets || []).forEach(function (wt, i) {
             var reps = (v.reps || [])[i] != null ? v.reps[i] : (plan[i] ? plan[i].r : null);
@@ -2863,6 +2905,7 @@ input.w { width: 88px; } input.r { width: 64px; } input.s { width: 200px; max-wi
   // This block's name: the Block column on "Program · Weeks" (log rows in the Sheet are filed under it).
   var BLOCK = (function () { var g = programFromSheet(recall(PROG_KEY)); return (g && g.block) || "Pre-Trek"; })();
   document.title = BLOCK + " Block";
+  if (SETTINGS.appName) { var mt = document.querySelector('meta[name="apple-mobile-web-app-title"]'); if (mt) mt.setAttribute("content", SETTINGS.appName); }
   function sheetRows(id, lg) {
     lg = lg || {};
     var s = sessDef(id); if (!s || !s.blocks) s = { blocks: [] };
@@ -2979,7 +3022,8 @@ input.w { width: 88px; } input.r { width: 64px; } input.s { width: 200px; max-wi
     if (newVersion) maybeReload(); else checkVersion();
   });
   var saved = recall(PROG_KEY);
-  if (saved) applyProgram(saved);
+  // The sheet's weeks can differ from the built-in ones, so pick this week again with them.
+  if (saved && applyProgram(saved)) { nowPick = pickNow(); weekSel = nowPick.week || 1; }
   var ui0 = null;
   try { ui0 = JSON.parse(sessionStorage.getItem(UIKEY) || "null"); sessionStorage.removeItem(UIKEY); } catch (e) {}
   if (ui0) {
@@ -3024,7 +3068,7 @@ input.w { width: 88px; } input.r { width: 64px; } input.s { width: 200px; max-wi
    Everything is saved on this phone first. Anything that can't send waits here and retries. */
 (function () {
   "use strict";
-  var SYNC_URL = "https://script.google.com/macros/s/AKfycbzNRNvmgsXimHRz-8bfrjcmK2rNrKYJJGmi3OR1NpYIQXQUpYWI0JJv0b2EXGh34B1o/exec"; // Google Apps Script web app address
+  var SYNC_URL = (window.APP_SETTINGS || {}).syncUrl || ""; // set in YOUR SETTINGS at the top
   var DB = "ptb-db-v1", PASS = "wr-sync-pass", PEND = "wr-sync-pending", INIT = "wr-sync-init", LAST = "wr-sync-last";
   function get(k) { try { var v = localStorage.getItem(k); return v ? JSON.parse(v) : null; } catch (e) { return null; } }
   function put(k, v) { try { if (v == null) localStorage.removeItem(k); else localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} }
@@ -3174,6 +3218,11 @@ input.w { width: 88px; } input.r { width: 64px; } input.s { width: 200px; max-wi
       .then(function (res) {
         // An older sync script answers without a program; the app keeps what it has.
         if (res && res.ok && Array.isArray(res.program)) window.WR.program({ program: res.program, weeks: res.weeks || [], lifts: res.lifts || [] });
+        // A wrong passcode shows up here first when nothing is waiting to send.
+        else if (res && res.error === "passcode" && get(PASS) === pass) {
+          put(PASS, null); state = "badpass"; show();
+          openDlg("That passcode didn't match the sync script. Check it and try again.");
+        }
       }, function () {});
   }
   document.addEventListener("visibilitychange", function () { if (document.visibilityState === "visible") loadProgram(); });

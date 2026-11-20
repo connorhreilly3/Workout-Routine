@@ -1,0 +1,85 @@
+HOW TO USE THIS FILE
+1. Fill in YOUR DETAILS below (replace each [[...]]). Nothing else needs editing.
+2. In Claude, create a scheduled task that runs every Sunday evening (for example 5:00 PM), with the
+   Google Calendar and Google Sheets (or Google Drive) connectors turned on.
+3. Paste everything from the line "Weekly training run" to the end as the task's prompt.
+4. Run it once by hand to check it, then let it run on its own.
+
+-----------------------------------------------------------------------------------------------
+
+Weekly training run for [[YOUR NAME]]. I have authorized every action below, and only those actions.
+
+YOUR DETAILS
+- Time zone: [[TIME ZONE, e.g. America/New_York]]. Use it for every date, time and calendar event (always pass this timeZone when creating or updating events).
+- Workout app: [[YOUR APP URL, e.g. https://yourname.github.io/Workout-Routine/]]
+- App code (public repo, branch main): [[YOUR GITHUB REPO URL, e.g. https://github.com/yourname/Workout-Routine]]
+- Workout Routine Sheet ID: [[THE LONG ID FROM YOUR SHEET'S WEB ADDRESS, between /d/ and /edit]]
+- Calendar for lifts: [[THE CALENDAR TO PUT LIFTS ON, e.g. you@gmail.com]]
+- Other calendars to check for conflicts: [[e.g. your work calendar's address, or "none"]]
+- Gym (event location): [[YOUR GYM]]
+- Home city: [[YOUR CITY]]. Days I'm clearly somewhere else count as AWAY.
+- Known away dates: [[e.g. Dec 20-27, 2026, or "none"]]
+- Holidays with no lift: [[e.g. Thu Nov 26, 2026, or "none"]]
+- Fallback lift time when a lift's Time isn't a clear clock range: [[e.g. 7:00-8:00 AM]]
+
+DATES
+- Get the current date from the clock tool; don't assume the weekday. This run normally fires Sunday evening.
+- NEXT WEEK = the Monday through Saturday after today.
+- 14-DAY WINDOW = the 14 days starting tomorrow.
+
+KEY FACTS
+- I log every session in the workout app. The app reads my program from the Sheet and writes my logs back to it.
+- The program lives on three tabs of the Sheet. They are the source of truth for weeks, lift days and sessions:
+  - "Program · Weeks": Block (the block's name; call it BLOCK), Week, Starts (that week's Monday), Phase, Intent. The test week is the week whose Phase is "Test".
+  - "Program · Lifts": Lift (1-4), Label, Title, Usual day, Time, Duration, Warm-up.
+  - "Program": one row per exercise. Week and Lift are filled only where they change (carry them down). Block (A, B, C, D) is on a block's first exercise, with Block name and Rest. Then Exercise, Sets × reps, Load, Back-off, Notes, Log ("weight" = I log weight and reps; "score: ..." = a finisher score; blank = check-off), Timer, ID (exercise key), and session settings on a workout's first row: Day (moves that lift to that day), Warm-up (replaces the lift's warm-up), Test day, Session note, Off (no lift that week; the text is the reason). Main lifts (ID squat, bench, trap, press or clean) have Load as % of training max, one % or one per set (e.g. "65/70/75/75%"), with Sets × reps as "4 × 5" or reps per set ("5/5/3/3"). Other exercises have Load in lb (target weights; see STEP 4) or blank.
+- Logs, also on the Sheet (filled in by the app; use only rows whose Block equals BLOCK):
+  - Sessions: Block, Session ID (w<week>-l<lift>, or x-<date> for an extra session), Date, Week, Lift, Session, Status (Done or In progress), Minutes, Finisher, Notes, Last updated.
+  - Sets: Block, Session ID, Date, Week, Lift, Exercise, Set, Prescribed (e.g. "5 @ 75%" or "3 x 8 each leg"), Weight (lb), Reps, Missed, Done.
+  - Bodyweight: Block, Week, Date, Weight (lb).
+  - Runs: Date, Summary. One row per run of this task.
+- App settings: clone the repo (git clone --depth 1 <repo URL>) and read window.APP_SETTINGS at the top of index.html: trainingMax (training maxes in lb for squat, bench, trap, press, clean), classes (day 0 = Mon ... 6 = Sun, with a time) and restDay. A main lift's load is training max × % rounded to the nearest 5 lb. I can change training maxes on the app's Maxes tab, which this task can't see, so a newer number in a session note or LAST RUN wins.
+
+Each step is independent. If one fails, finish the others and report what failed.
+
+STEP 1 - WHERE AM I. List events on the lift calendar and the other calendars for the 14-DAY WINDOW. A day is AWAY if it falls in the known away dates, an all-day trip event covers it, I have an outbound flight from my home city without a return yet, or similar clear travel. Also read the last row of the Runs tab, if there is one (LAST RUN).
+
+STEP 2 - LIFTS FOR NEXT WEEK.
+- Find NEXT WEEK's block week on "Program · Weeks". If NEXT WEEK is after the last week there, place nothing: tell me the block is finished and the next one needs to be written (Start here tab, "Next block"). If LAST RUN already said this, keep it to one line.
+- Otherwise take that week's workouts from the Program tab (skip any with Off filled in). A lift already marked Done in the Sheet for that week doesn't need an event.
+- Slot: the lift's Time on "Program · Lifts", on the workout's Day if it has one, otherwise the lift's Usual day. If the Time isn't a clear clock range, use the fallback lift time. Classes in APP_SETTINGS.classes with a clock time count as busy.
+- Check every calendar listed for conflicts. If a slot conflicts, move it to the nearest free window of the same length that day (mornings preferred, nothing before 6:00 AM); else the nearest Mon-Sat day of that week with no lift that isn't AWAY, a holiday or the rest day; else don't place it and flag it. Never two lifts on one day, never on the rest day, never on an AWAY day or a holiday.
+- Before creating anything, check the lift calendar for existing events starting with "Lift " that week. A lift that already has one keeps it exactly as it is (I put it there on purpose); only update its description if a load or exercise no longer matches the Program tab. Create events only for lifts that don't have one.
+- Event format: title "Lift N · <lift Title> (Wk n)", location = my gym, description = the full session as plain text (warm-up, blocks A-D, sets x reps; for main lifts add @ lb (%) using the training maxes; for other exercises with a Load in lb, add @ that weight), ending with "Log it: <app URL>".
+
+STEP 3 - REVIEW LAST WEEK. LAST WEEK = the block week before NEXT WEEK's. If there is none or the Sheet has no rows for it, say so in one line and skip. Otherwise read the Sessions, Sets and Bodyweight rows for LAST WEEK's week number, plus any extra sessions (x-<date>) dated in that week:
+- Which lifts are Done, which are still In progress or missing.
+- Top sets vs. prescription: for main lifts compare each set's Weight with the load for its Prescribed %; list sets marked Missed and sets left not Done.
+- Session notes about pain, soreness or how it felt; the weigh-in and its trend.
+- Follow up on any recommendation in LAST RUN.
+- After the test week, propose new training maxes at 90% of the best completed single for each tested lift (the app's Maxes tab suggests the same; I accept it there).
+Don't change the program or training maxes; recommend changes instead.
+
+STEP 4 - TARGET WEIGHTS FOR NEXT WEEK (the only change you make to the program).
+- Target weights live in the Load column of the Program tab. The app fills the weight boxes with them: one number = every set, "115/125/135" = one weight per set. Main lifts have % loads; never change those.
+- If NEXT WEEK has no block week, skip this step. Otherwise, for each NEXT WEEK workout (skip Off workouts and lifts already Done), work out a target for each exercise that isn't a main lift and has Log "weight":
+  1. Start from the most recent logged weight for that exercise in the Sets tab (any week of BLOCK; variants like "Slow strict chin-up" and "Weighted chin-up" count as the same lift). For per-set rows, use the working weight I completed for the prescribed reps.
+  2. Adjust it with the program and how last time went:
+     - The note names a weight (e.g. "Try 70s"): use that.
+     - Fewer reps than last time (e.g. 4 x 8 then 4 x 6) or a note like "Heavier than last week" or "Heaviest of the block": add about 2.5% per rep dropped, at least 5 lb, rounded to the nearest 5 lb. Example: row 90, 115, 115, 115 x 8 last week, 4 x 6 this week -> 125.
+     - Same sets and reps, everything Done and nothing Missed: add 5 lb if the note asks for progress (e.g. "add 5 lb next time"); otherwise keep the weight.
+     - Missed reps or sets not Done last time: keep the weight; if two or more sets were missed, take off 5-10%.
+     - Lighter sessions (notes like "Moderate", "Easy", "Lighter on purpose", test-week accessories): about 10-20% under last time.
+     - A session note about pain on that lift: keep the weight and flag it in the summary.
+     - No logged weight for that exercise (bodyweight work, new exercise): no target.
+  3. Use one number unless the sets should differ; a list is for a ramp.
+- Write: find the Load column by its header and, for each target, write it as text into that exercise's Load cell on NEXT WEEK's row, only if the cell is empty. If I already put a weight there, leave it and mention your number in the summary only if it differs. Write nothing else: no other cells, rows, columns, tabs or formatting, and no Load cells outside NEXT WEEK. Read the cells back afterwards to confirm. If you can't write, list the targets in the summary and say they weren't saved.
+
+STEP 5 - CHANGE REQUESTS (suggest only; never act).
+Read the Notes of every session whose Last updated is after LAST RUN (or within the past 8 days if there's no LAST RUN). Pick out anything asking to change the app or the workout (exercises, sets, reps, loads, days, timing). For each, write one numbered item: the session and date, the request in a few words, and a concrete proposal (exactly what would change, and which weeks it affects). Add any change you'd recommend from STEP 3. Make none of these changes. Notes about pain or how a session felt belong in STEP 3, not here.
+
+STEP 6 - RECORD AND SUMMARY.
+- Add one row to the bottom of the Runs tab: Date = today (yyyy-mm-dd), Summary = calendar events created or updated (with event IDs), the targets set and the cells written, recommendations and change requests made, and anything flagged. This row is LAST RUN next week.
+- Then send me one concise message with SendUserMessage, bold headings, plain text, no tables: Lifts placed (day + time) and anything moved or skipped; Last week (highlights, weigh-in, recommendations); Targets (each as "exercise: weight", with a few words on why when it went up or down, and whether it's saved to the Sheet, which puts it in the app; plus any weight I had already entered that differs from yours); Change requests (the numbered items, ending with "Reply with the numbers you want and I'll make those changes."; leave the section out if there are none); To do. Mention it if the Runs row didn't save.
+
+Never enter passwords, never pay for anything, never send messages or invites to anyone, never delete calendar events, never push to GitHub, and never write to the Sheet except STEP 4's empty Load cells for next week on the Program tab and STEP 6's one new row on the Runs tab.
