@@ -20,6 +20,10 @@ window.APP_SETTINGS = {
   classes: [],
   // Your weekly day off (0 = Mon ... 6 = Sun), or null for none.
   restDay: 6,
+  // Barbell loading: each main lift's empty bar in lb, and the smallest plate you use (lb, one side).
+  // Loads round to the nearest weight you can load. smallestPlate 5 = no 2.5s, so loads move in 10 lb steps.
+  bars: { squat: 45, bench: 45, trap: 45, press: 45, clean: 45 },
+  smallestPlate: 2.5,
   // Shown next to the weekly weigh-in on the Week tab.
   weighInNote: "Same scale, same morning.",
   // Training maxes in lb for back squat, bench press, trap bar deadlift, strict press and power clean:
@@ -577,7 +581,7 @@ input.w { width: 88px; } input.r { width: 64px; } input.s { width: 200px; max-wi
   var ONE_RM = Object.assign({}, ONE_RM_PLAN, recall("wr-1rm") || {});
   var TM = Object.assign({}, TM_PLAN, recall("wr-tm") || {});
   // Shown at the bottom of the Maxes tab; bump it with every update so it's easy to tell which version a phone has.
-  var APP_VERSION = "30 · Nov 20";
+  var APP_VERSION = "31 · Nov 21";
   var TM_NAMES = { squat: "Back squat", bench: "Bench press", trap: "Trap bar deadlift", press: "Strict press", clean: "Power clean" };
   var BARBELL = { squat: true, bench: true, press: true, clean: true };
 
@@ -1068,7 +1072,11 @@ input.w { width: 88px; } input.r { width: 64px; } input.s { width: 200px; max-wi
     try { return new Intl.DateTimeFormat("en-CA", { year: "numeric", month: "2-digit", day: "2-digit" }).format(new Date()); }
     catch (e) { return iso(new Date()); }
   }
-  function load(lift, pct) { return Math.round(TM[lift] * pct / 100 / 5) * 5; }
+  // Training max × %, rounded to the nearest weight you can load on that bar with your smallest plate.
+  function load(lift, pct) {
+    var bar = (SETTINGS.bars && SETTINGS.bars[lift]) || 45, step = 2 * (SETTINGS.smallestPlate || 2.5), w = TM[lift] * pct / 100;
+    return w <= bar ? bar : bar + Math.round((w - bar) / step) * step;
+  }
   // Barbell lifts get a weight per set; dumbbell, kettlebell and machine work keep one weight.
   function perSet(it) { return !!it.main || /barbell|ez-bar|trap bar/i.test(it.n); }
   function normName(n) { return n.toLowerCase().replace(/\b(slow|strict|weighted|db|dumbbell)\b/g, "").replace(/[^a-z]/g, ""); }
